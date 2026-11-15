@@ -1,7 +1,9 @@
-# Tests and builds the SPA on every push to master, version tag and pull request, and runs the Playwright E2E
-# suite against the real API. On master and on version tags it then pushes the web app's Docker image
-# (the SPA served by Caddy, linux/amd64 and linux/arm64) to ghcr.io/ricardotill/ssskl-frontend; a pull request
-# only checks that the image builds. Image tags: see dotnet.yml. See docs/docker.md.
+# Tests and builds the SPA on every push to master, version tag and pull request that changes it (see
+# changes.yml; a version tag always builds), and runs the Playwright E2E suite against the real API. A change to
+# only the backend runs just the E2E suite, since it tests the API too. On master and on version tags it then
+# pushes the web app's Docker image (the SPA served by Caddy, linux/amd64 and linux/arm64) to
+# ghcr.io/ricardotill/ssskl-frontend; a pull request only checks that the image builds. Image tags: see
+# dotnet.yml. See docs/docker.md.
 #
 # Dependabot PRs (rebased on every master push) get a lean run: no E2E, test & build only for npm, Docker and
 # GitHub Actions updates (not NuGet), and the Docker image check only for Docker base-image updates.
@@ -27,12 +29,18 @@ env:
   IMAGE: ghcr.io/ricardotill/ssskl-frontend
 
 jobs:
+  changes:
+    name: Changes
+    uses: ./.github/workflows/changes.yml
+
   build-and-test:
+    needs: changes
     if: >-
+      needs.changes.outputs.frontend == 'true' && (
       github.event.pull_request.user.login != 'dependabot[bot]' ||
       startsWith(github.head_ref, 'dependabot/npm_and_yarn/') ||
       startsWith(github.head_ref, 'dependabot/docker/') ||
-      startsWith(github.head_ref, 'dependabot/github_actions/')
+      startsWith(github.head_ref, 'dependabot/github_actions/'))
     runs-on: ubuntu-latest
 
     defaults:
@@ -73,8 +81,11 @@ jobs:
 
   e2e:
     # Playwright against the real API (ASPNETCORE_ENVIRONMENT=E2E, seeded SQLite) and the dev server.
-    # Not for Dependabot PRs; master runs it after the merge.
-    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    # Not for Dependabot PRs; master runs it after the merge. Also for backend-only changes: it tests the API.
+    needs: changes
+    if: >-
+      (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true') &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -150,8 +161,11 @@ jobs:
 
   version:
     name: Version
+    needs: changes
     # Skipping it for Dependabot also skips the image job, except for Docker base-image updates.
-    if: github.event.pull_request.user.login != 'dependabot[bot]' || startsWith(github.head_ref, 'dependabot/docker/')
+    if: >-
+      needs.changes.outputs.frontend == 'true' &&
+      (github.event.pull_request.user.login != 'dependabot[bot]' || startsWith(github.head_ref, 'dependabot/docker/'))
     uses: ./.github/workflows/version.yml
 
   image:

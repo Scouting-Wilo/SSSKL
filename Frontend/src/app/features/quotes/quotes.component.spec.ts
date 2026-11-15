@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { vi } from 'vitest';
@@ -20,6 +20,9 @@ describe('QuotesComponent', () => {
   let messageService: { add: ReturnType<typeof vi.fn> };
   let dialogService: { open: ReturnType<typeof vi.fn> };
   let dialogClose: Subject<any>;
+  let dialogRef: { onClose: Subject<any>; close: ReturnType<typeof vi.fn> };
+  let queryParams: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+  let fixture: ReturnType<typeof TestBed.createComponent<QuotesComponent>>;
   let currentUser: ReturnType<typeof signal<any>>;
   let router: { navigate: ReturnType<typeof vi.fn> };
   let embedded: { isEmbedded: boolean; notifyNative: ReturnType<typeof vi.fn> };
@@ -32,10 +35,11 @@ describe('QuotesComponent', () => {
   } as unknown as QuoteDto;
 
   function create(query: Record<string, string> = {}) {
+    queryParams = new BehaviorSubject(convertToParamMap(query));
     TestBed.configureTestingModule({
       imports: [QuotesComponent],
       providers: [
-        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
+        { provide: ActivatedRoute, useValue: { queryParamMap: queryParams } },
         { provide: Router, useValue: router },
         { provide: EmbeddedService, useValue: embedded },
         { provide: QuoteService, useValue: quoteService },
@@ -47,7 +51,7 @@ describe('QuotesComponent', () => {
     TestBed.overrideComponent(QuotesComponent, {
       set: { template: '', providers: [{ provide: DialogService, useValue: dialogService }] },
     });
-    const fixture = TestBed.createComponent(QuotesComponent);
+    fixture = TestBed.createComponent(QuotesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }
@@ -62,7 +66,8 @@ describe('QuotesComponent', () => {
     settingsService = { getSetting: vi.fn(() => of({ value: 'Leiding, Bestuur' })) };
     messageService = { add: vi.fn() };
     dialogClose = new Subject();
-    dialogService = { open: vi.fn(() => ({ onClose: dialogClose })) };
+    dialogRef = { onClose: dialogClose, close: vi.fn() };
+    dialogService = { open: vi.fn(() => dialogRef) };
     currentUser = signal<any>({ id: 'u1', roles: ['User'] });
     router = { navigate: vi.fn(() => Promise.resolve(true)) };
     embedded = { isEmbedded: false, notifyNative: vi.fn() };
@@ -190,6 +195,28 @@ describe('QuotesComponent', () => {
     expect(messageService.add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
   });
 
+  it('closes the open form when the page is left, without handling a result', () => {
+    embedded.isEmbedded = true;
+    create({ new: '1' });
+
+    fixture.destroy();
+
+    expect(dialogRef.close).toHaveBeenCalledTimes(1);
+    dialogClose.next(undefined); // what PrimeNG emits while closing
+    expect(embedded.notifyNative).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('leaves nothing to close when the form was already closed', () => {
+    create();
+    component.openQuoteForm();
+    dialogClose.next(undefined);
+
+    fixture.destroy();
+
+    expect(dialogRef.close).not.toHaveBeenCalled();
+  });
+
   describe('form links (the mobile app opens these in its WebView)', () => {
     it('opens the form for a new quote on ?new', () => {
       create({ new: '1' });
@@ -235,6 +262,18 @@ describe('QuotesComponent', () => {
 
       expect(embedded.notifyNative).not.toHaveBeenCalled();
       expect(quoteService.getQuotes).toHaveBeenCalled();
+    });
+
+    it('opens the edit form when the reused page goes from ?new to ?edit=, replacing the open form', () => {
+      embedded.isEmbedded = true;
+      quoteService.getQuote = vi.fn(() => of(quote));
+      create({ new: '1' });
+
+      queryParams.next(convertToParamMap({ edit: 'q1' }));
+
+      expect(dialogRef.close).toHaveBeenCalledTimes(1);
+      expect(embedded.notifyNative).not.toHaveBeenCalled();
+      expect(dialogService.open).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ data: { quote } }));
     });
 
     it('in the app, hands back to the list when the quote to edit is gone', () => {

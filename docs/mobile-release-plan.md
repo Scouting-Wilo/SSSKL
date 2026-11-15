@@ -13,7 +13,7 @@ This plan covers two things:
 
 ### 1.1 What exists today
 
-- `.github/workflows/mobile.yml` runs by hand only: Core tests plus an unsigned Android build and an unsigned iOS simulator build. Nothing is signed or uploaded.
+- `.github/workflows/mobile.yml` runs for every push and PR that changes the app: Core tests plus an unsigned Android build, an unsigned iOS simulator build and the SonarCloud analysis. Nothing is signed or uploaded.
 - `SSSKL.Mobile.csproj`: `ApplicationId` `nl.scoutingwilo.ssskl`, `ApplicationDisplayVersion = $(Version)`, `ApplicationVersion = 1` (hard-coded), Native AOT in Release, Sentry symbol upload when `SENTRY_AUTH_TOKEN` is set.
 - Versioning: the git tag `vX.Y.Z` on master is the single source (`version.yml`), shared by API, SPA and Docker images.
 - The iOS CI build failed on `macos-latest` (macOS 26, no Xcode 27.2). The `xcode-27` runner image has Xcode 27.2 but no .NET 11, so the iOS jobs run there and install .NET 11 with `setup-dotnet`.

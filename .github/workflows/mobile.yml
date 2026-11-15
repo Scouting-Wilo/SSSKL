@@ -1,19 +1,44 @@
+# Tests, builds and analyzes the MAUI app (Mobile/) on every push to master and pull request that changes it
+# (see changes.yml), and on a manual run. Without mobile changes every job is skipped. Store releases are
+# mobile-release.yml, on the release tag.
+#
+#   test           Core tests (net11.0, no workload)
+#   build-android  Release build (Native AOT), like the store build
+#   build-ios      Release build for the simulator, unsigned
+#   scan           SonarCloud project SSSKLv2_Mobile: one Debug build of the whole solution, both platforms
+#                  (Android and iOS code only compile in their own target framework), plus Core's coverage
 name: Mobile CI
 
-# The mobile app is still in development, so this workflow doesn't run on pushes or pull requests yet:
-# start it by hand (Actions → Mobile CI → Run workflow). To turn it on, restore the triggers:
-#   push: { branches: [ "master" ], paths: [ "Mobile/**", "Directory.Packages.props", "Directory.Build.props", ".github/workflows/mobile.yml" ] }
-#   pull_request: { types: [opened, synchronize, reopened], paths: (same) }
 on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 env:
   DOTNET_VERSION: '11.0.x'
+  # .NET for iOS 27.2 needs exactly this Xcode (runner image xcode-27); keep in step with mobile-release.yml.
+  XCODE_APP: /Applications/Xcode_27.2.app
 
 jobs:
-  test-android:
-    name: Test & build Android
+  changes:
+    name: Changes
+    uses: ./.github/workflows/changes.yml
+
+  test:
+    name: Mobile tests
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - uses: actions/checkout@v7
       with:
@@ -26,6 +51,22 @@ jobs:
 
     - name: Test (Core, no workload needed)
       run: dotnet test Mobile/SSSKL.Mobile.Test --verbosity normal
+
+  build-android:
+    name: Build Android
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Setup Java
       uses: actions/setup-java@v6
@@ -42,9 +83,12 @@ jobs:
 
   build-ios:
     name: Build iOS (simulator, unsigned)
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     # The Xcode 27 image: .NET for iOS 27.2 needs Xcode 27.2, which macos-latest (macOS 26) doesn't have.
     # The image has no .NET 11 SDK; setup-dotnet below installs it.
     runs-on: xcode-27
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v7
       with:
@@ -58,7 +102,7 @@ jobs:
     - name: Select Xcode
       # .NET for iOS needs the Xcode it was built against (27.2); the image's default is 27.1.
       run: |
-        sudo xcode-select -s /Applications/Xcode_27.2.app
+        sudo xcode-select -s "$XCODE_APP"
         xcodebuild -version
 
     - name: Install MAUI iOS workload
@@ -67,3 +111,98 @@ jobs:
     - name: Build iOS
       # Restore evaluates every target framework; limit it to the one this runner has the workload for.
       run: dotnet build Mobile/SSSKL.Mobile -f net11.0-ios -p:SssklTargetFrameworks=net11.0-ios -c Release -p:RuntimeIdentifier=iossimulator-arm64
+
+  scan:
+    name: SonarCloud Analyze (mobile)
+    needs: changes
+    # Dependabot and fork PRs get no SONAR_TOKEN; the build jobs still verify them.
+    if: >-
+      needs.changes.outputs.mobile == 'true' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    # macOS, because only it can build both platforms: the analysis needs the Android and the iOS compilation.
+    runs-on: xcode-27
+    timeout-minutes: 90
+    defaults:
+      run:
+        # The analysis' base directory: keeps the Backend and Frontend files out of this project.
+        working-directory: Mobile
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+        fetch-depth: 0 # blame information for new-code detection
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Select Xcode
+      run: |
+        sudo xcode-select -s "$XCODE_APP"
+        xcodebuild -version
+
+    - name: Setup Java 17 (Android build)
+      id: java17
+      uses: actions/setup-java@v6
+      with:
+        java-version: 17
+        distribution: 'microsoft'
+
+    - name: Setup Java 21 (Sonar scanner)
+      # Installed last, so JAVA_HOME points at it; the Android build gets Java 17 explicitly.
+      uses: actions/setup-java@v6
+      with:
+        java-version: 21
+        distribution: 'zulu'
+
+    - name: Install MAUI workloads
+      run: dotnet workload install maui-android maui-ios
+
+    - name: Install Android SDK packages
+      # Uses the image's SDK when it has one and adds the platform and build tools this app needs.
+      env:
+        JAVA17: ${{ steps.java17.outputs.path }}
+      run: |
+        sdk="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+        echo "ANDROID_SDK_DIR=$sdk" >> "$GITHUB_ENV"
+        dotnet build SSSKL.Mobile -t:InstallAndroidDependencies -f net11.0-android \
+          -p:SssklTargetFrameworks=net11.0-android -p:AndroidSdkDirectory="$sdk" \
+          -p:JavaSdkDirectory="$JAVA17" -p:AcceptAndroidSDKLicenses=True
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v6
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: Install SonarCloud scanner
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: Build and analyze
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        JAVA17: ${{ steps.java17.outputs.path }}
+      # Coverage only counts Core: the MAUI layer (pages, controls, platform code) has no unit tests, and would
+      # otherwise fail the new-code coverage condition on every UI change. It is still analyzed for issues.
+      run: |
+        dotnet-sonarscanner begin \
+          /k:"SSSKLv2_Mobile" \
+          /o:"ricardotill" \
+          /d:sonar.token="$SONAR_TOKEN" \
+          /d:sonar.host.url="https://sonarcloud.io" \
+          /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
+          /d:sonar.exclusions="TestResults/**,screenshots/**,fastlane/**" \
+          /d:sonar.coverage.exclusions="SSSKL.Mobile/**" \
+          /d:sonar.scanner.skipJreProvisioning=true
+
+        dotnet build SSSKL.Mobile.slnx -c Debug \
+          -p:AndroidSdkDirectory="$ANDROID_SDK_DIR" -p:JavaSdkDirectory="$JAVA17"
+
+        dotnet test SSSKL.Mobile.Test --no-build -c Debug --results-directory TestResults \
+          --settings coverage.runsettings
+
+        dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"

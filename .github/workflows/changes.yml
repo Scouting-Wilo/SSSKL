@@ -1,0 +1,81 @@
+# Works out which parts of the repo a push or pull request changes, so each CI workflow only builds and
+# analyzes what it touched. Called first by dotnet.yml, frontend-ci.yml and mobile.yml; their jobs skip when
+# their area didn't change. A job skipped by its `if` counts as passed, so required checks such as
+# "Build & Test" don't block a pull request that doesn't touch the backend (path filters on the trigger would:
+# a workflow that never starts leaves its required checks pending forever).
+#
+# Release tags, manual runs and pushes without a commit to compare with build everything.
+# Keep the patterns in step with what each area's build reads (shared MSBuild files count for both .NET areas).
+name: Changes
+
+on:
+  workflow_call:
+    outputs:
+      backend:
+        description: "'true' when the API, its tests or the shared .NET build files changed"
+        value: ${{ jobs.changes.outputs.backend }}
+      frontend:
+        description: "'true' when the SPA changed"
+        value: ${{ jobs.changes.outputs.frontend }}
+      mobile:
+        description: "'true' when the MAUI app, its tests or the shared .NET build files changed"
+        value: ${{ jobs.changes.outputs.mobile }}
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Changed areas
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.diff.outputs.backend }}
+      frontend: ${{ steps.diff.outputs.frontend }}
+      mobile: ${{ steps.diff.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Compare with the base
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          BEFORE: ${{ github.event.before }}
+          BACKEND: '^(Backend/|SSSKL\.slnx$|Directory\.(Build|Packages)\.props$|\.config/|\.dockerignore$|\.github/workflows/(dotnet|version|changes)\.yml$)'
+          FRONTEND: '^(Frontend/|\.dockerignore$|\.github/workflows/(frontend-ci|version|changes)\.yml$)'
+          MOBILE: '^(Mobile/|Directory\.(Build|Packages)\.props$|\.config/|\.github/workflows/(mobile|changes)\.yml$)'
+        run: |
+          everything() {
+            echo "Building everything: $1" | tee -a "$GITHUB_STEP_SUMMARY"
+            printf 'backend=true\nfrontend=true\nmobile=true\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          case "$EVENT" in
+            # The checkout is the merge commit: its first parent is the base branch, so this is the PR's change.
+            pull_request) range="HEAD^1 HEAD" ;;
+            push)
+              [[ "$REF" == refs/tags/* ]] && everything "release tag"
+              [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]] && everything "new branch"
+              range="$BEFORE HEAD" ;;
+            *) everything "$EVENT run" ;;
+          esac
+
+          # Unknown base (a force push dropped it): build everything rather than skip something.
+          # shellcheck disable=SC2086
+          files="$(git diff --name-only $range)" || everything "can't compare with $range"
+
+          check() { # area, pattern
+            local changed=false
+            grep -qE "$2" <<< "$files" && changed=true
+            echo "$1=$changed" >> "$GITHUB_OUTPUT"
+            echo "- $1: $changed" | tee -a "$GITHUB_STEP_SUMMARY"
+          }
+          echo "### Changed areas" >> "$GITHUB_STEP_SUMMARY"
+          check backend "$BACKEND"
+          check frontend "$FRONTEND"
+          check mobile "$MOBILE"

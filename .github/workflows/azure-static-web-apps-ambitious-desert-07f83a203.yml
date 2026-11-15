@@ -1,6 +1,7 @@
 # Deploys the SPA to Azure Static Web Apps. Production gets a release: a tag vX.Y.Z on master
 # (git tag v1.4.0 && git push origin v1.4.0), built with that version (.github/workflows/version.yml);
-# a pre-release tag or a tag that is not on master deploys nothing. Pull requests get a preview environment.
+# a pre-release tag or a tag that is not on master deploys nothing. Pull requests that change the SPA get a
+# preview environment (the path filter also limits `closed`, so only those PRs tear one down).
 name: Azure Static Web Apps CI/CD
 
 on:
@@ -11,6 +12,10 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - master
+    paths:
+      - "Frontend/**"
+      - ".github/workflows/azure-static-web-apps-ambitious-desert-07f83a203.yml"
+      - ".github/workflows/version.yml"
 
 permissions:
   contents: read

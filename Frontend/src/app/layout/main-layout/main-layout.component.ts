@@ -1,5 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -76,6 +78,17 @@ import { EmbeddedService } from '../../core/services/embedded.service';
 export class MainLayoutComponent {
   protected readonly embedded = inject(EmbeddedService).isEmbedded;
   isSidebarOpen = signal(false);
+
+  constructor() {
+    // The layout's confirm dialog outlives the page that asked; don't leave it open on the next page.
+    const confirmation = inject(ConfirmationService);
+    inject(Router)
+      .events.pipe(
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => confirmation.close());
+  }
 
   toggleSidebar() {
     this.isSidebarOpen.update(open => !open);

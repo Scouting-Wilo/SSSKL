@@ -1,11 +1,13 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule, DataViewLazyLoadEvent } from 'primeng/dataview';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { MessageService } from 'primeng/api';
+import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { QuoteService } from './services/quote.service';
 import { QuoteDto, QuoteCreateDto } from '../../core/models/quote.model';
 import { LanguageService } from '../../core/services/language.service';
@@ -106,6 +108,19 @@ export default class QuotesComponent implements OnInit {
   private readonly embedded = inject(EmbeddedService);
   ls = inject(LanguageService);
 
+  /**
+   * The open form. DialogService attaches it to the app root, not to this page, so it would stay open after
+   * navigating away (also in the mobile app's reused WebView); it's removed when the page is destroyed.
+   */
+  private formRef?: DynamicDialogRef;
+  private formCloseSubscription?: Subscription;
+
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.discardForm());
+  }
+
   quotes = signal<QuoteDto[]>([]);
   totalRecords = signal<number>(0);
   loading = signal<boolean>(false);
@@ -128,15 +143,25 @@ export default class QuotesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSettings();
-    this.openFormFromLink();
+    // The page stays when only the query changes (the app's reused WebView going from `?new` to `?edit=`).
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => this.openFormFromLink(params));
+  }
+
+  /** Closes the open form without its result handling (that would hand back to the app or navigate). */
+  private discardForm(): void {
+    this.formCloseSubscription?.unsubscribe();
+    this.formCloseSubscription = undefined;
+    this.formRef?.close();
+    this.formRef = undefined;
   }
 
   /**
    * `?new` opens the form for a new quote, `?edit=<id>` the form for that quote. The mobile app opens these
    * links in its WebView (its quote pages are native) and gets the result handed back afterwards.
    */
-  private openFormFromLink(): void {
-    const params = this.route.snapshot.queryParamMap;
+  private openFormFromLink(params: ParamMap): void {
     if (params.has('new')) {
       this.openQuoteForm(undefined, true);
       return;
@@ -207,6 +232,8 @@ export default class QuotesComponent implements OnInit {
 
   /** @param fromLink opened by `?new` / `?edit=`: hand the result back to the mobile app when it's done. */
   openQuoteForm(quote?: QuoteDto, fromLink = false): void {
+    // A form left open (the app reopening `?new`) is replaced, so its handlers don't run twice.
+    this.discardForm();
     const ref = this.dialogService.open(QuoteFormDialogComponent, {
       header: quote ? 'Edit Quote' : 'Add Quote',
       width: '500px',
@@ -214,7 +241,9 @@ export default class QuotesComponent implements OnInit {
     });
 
     if (ref) {
-      ref.onClose.subscribe((result: any) => {
+      this.formRef = ref;
+      this.formCloseSubscription = ref.onClose.subscribe((result: any) => {
+        this.formRef = undefined;
         const backTo = quote ? `/quotes/${quote.id}` : '/quotes';
         if (!result && fromLink) {
           this.finishLinkedForm(backTo);

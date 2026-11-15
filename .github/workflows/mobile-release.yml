@@ -1,6 +1,7 @@
 # Releases the MAUI app to the stores for a release tag vX.Y.Z on master (the same tag as the API and SPA).
 #
 #   build-android ──► android-internal (approve) ──► android-production (approve, stable tags only)
+#                                                └─► android-github (signed .apk on the GitHub release, for Obtainium)
 #   build-ios     ──► ios-testflight   (approve) ──► ios-app-store      (approve, stable tags only)
 #
 # Each app is built and signed once; the store jobs only move that artifact, so production gets the exact build
@@ -134,6 +135,10 @@ jobs:
           aab=$(find "$RUNNER_TEMP/publish" -name '*-Signed.aab' | head -1)
           if [ -z "$aab" ]; then echo "::error::No signed .aab in the publish output"; ls -R "$RUNNER_TEMP/publish"; exit 1; fi
           cp "$aab" "$RUNNER_TEMP/out/SSSKL.aab"
+          # The SDK also builds a signed universal .apk from the bundle: that one goes to the GitHub release (Obtainium).
+          apk=$(find "$RUNNER_TEMP/publish" -name '*-Signed.apk' | head -1)
+          if [ -z "$apk" ]; then echo "::error::No signed .apk in the publish output"; ls -R "$RUNNER_TEMP/publish"; exit 1; fi
+          cp "$apk" "$RUNNER_TEMP/out/SSSKL.apk"
           rm -f "$RUNNER_TEMP/upload.keystore"
           # Play deobfuscates Java/Kotlin stack traces with the R8 mapping the SDK embeds in the bundle.
           if ! unzip -l "$RUNNER_TEMP/out/SSSKL.aab" | grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map'; then
@@ -168,6 +173,13 @@ jobs:
           path: |
             ${{ runner.temp }}/out/SSSKL.aab
             ${{ runner.temp }}/out/native-debug-symbols.zip
+          if-no-files-found: error
+          retention-days: 90
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: ${{ runner.temp }}/out/SSSKL.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -287,6 +299,45 @@ jobs:
 
       - name: Summary
         run: echo "Build ${{ needs.meta.outputs.build_number }} is on the **internal testing** track in Google Play Console." >> "$GITHUB_STEP_SUMMARY"
+
+  # Obtainium (and anyone sideloading) installs from the GitHub release of the tag: attach the signed .apk once the
+  # build passed internal testing. Pre-release tags get a pre-release, which Obtainium skips unless asked to.
+  android-github:
+    name: GitHub release (Obtainium)
+    needs: [ version, meta, android-internal ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: android-apk
+          path: ${{ runner.temp }}/apk
+
+      - name: Attach .apk to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.version.outputs.version }}
+          STABLE: ${{ needs.version.outputs.stable }}
+        run: |
+          # The release is usually created by hand; create it (with generated notes) if it isn't there yet.
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            prerelease=$([ "$STABLE" = "true" ] || echo "--prerelease")
+            gh release create "$TAG" --verify-tag --generate-notes --title "$TAG" $prerelease
+          fi
+          asset="$RUNNER_TEMP/apk/SSSKL-$VERSION.apk"
+          mv "$RUNNER_TEMP/apk/SSSKL.apk" "$asset"
+          gh release upload "$TAG" "$asset" --clobber
+          {
+            echo "Attached \`SSSKL-$VERSION.apk\` (build ${{ needs.meta.outputs.build_number }}) to release [$TAG](https://github.com/$GH_REPO/releases/tag/$TAG) for Obtainium."
+            echo
+            echo '```'
+            keytool -printcert -jarfile "$asset" | grep -E 'Owner|SHA256:' || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   android-production:
     name: Google Play production

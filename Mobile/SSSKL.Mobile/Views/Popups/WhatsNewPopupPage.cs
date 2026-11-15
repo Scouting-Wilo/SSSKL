@@ -15,14 +15,14 @@ public sealed class WhatsNewPopupPage : PopupPage
               html, body { overflow-x: hidden; max-width: 100%; }
               body { font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 0 4px;
                      color: {{(dark ? "#e4e4e7" : "#27272a")}}; background: transparent; line-height: 1.5; }
-              /* The editor's HTML can hold long words, URLs, &nbsp; runs and pre-wrap whitespace: wrap them all
-                 (like the SPA's what's-new modal) so the popup only scrolls vertically. */
-              body * { white-space: normal !important; overflow-wrap: anywhere; word-break: normal;
+              /* Wrap like the SPA's what's-new modal: between words, and only inside a word (a long URL) that
+                 doesn't fit on a line, so the popup only scrolls vertically. */
+              body * { white-space: normal !important; overflow-wrap: break-word; word-break: normal;
                        max-width: 100%; box-sizing: border-box; }
               a { color: {{(dark ? "#34d399" : "#047857")}}; }
               img, video, iframe { max-width: 100%; height: auto; }
               ul, ol { padding-left: 1.25rem; }
-            </style></head><body>{{html}}</body></html>
+            </style></head><body>{{NormalizeSpaces(html)}}</body></html>
             """;
 
         var webView = new WebView
@@ -51,4 +51,14 @@ public sealed class WhatsNewPopupPage : PopupPage
             }
         });
     }
+
+    /// <summary>
+    /// The editor saves spaces as non-breaking ones, which glue a whole sentence into one unbreakable word.
+    /// Make them normal spaces, as the SPA's <c>processedContent</c> pipe does.
+    /// </summary>
+    private static string NormalizeSpaces(string html) => html
+        .Replace("&nbsp;", " ", StringComparison.OrdinalIgnoreCase)
+        .Replace("&#160;", " ", StringComparison.Ordinal)
+        .Replace("&#xa0;", " ", StringComparison.OrdinalIgnoreCase)
+        .Replace(' ', ' ');
 }

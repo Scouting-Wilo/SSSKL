@@ -64,6 +64,7 @@ MSTest + FluentAssertions + NSubstitute + Bogus, one test project per layer:
 - **`SSSKL.Infrastructure.Test`**: repository tests inherit `Util/RepositoryTest` (in-memory SQLite, `InitializeDatabase()`/`CleanupDatabase()`, seeded `TestUser`/`TestProduct`) and use `Util/MockDbContextFactory`; also agent, web push and Turnstile tests, plus handler tests (`Features/`: reactions, notifications, roles, settings, blobs) that run against real repositories.
 - **`SSSKL.Web.Test`**: controller tests that mock `ISender`, and integration tests (`Integration/`) that send real HTTP requests through `Integration/Infrastructure/SssklWebApplicationFactory` (IntegrationTest environment, one temp SQLite file per factory, fakes for email/web push/blob storage exposed as `Emails`/`Push`/`Blobs`; `WithSetting`/`WithServices` for overrides). Test classes derive from `IntegrationTestBase`, own one static factory (`[ClassInitialize]`/`[ClassCleanup]`) and use its helpers (`CreateAuthenticatedClientAsync(role)`, `SeedProductAsync`, `WithDbAsync`, `PollAsync`). Classes run in parallel (`MSTestSettings.cs`), so give each test its own users and data.
 - CI (`.github/workflows/dotnet.yml`) excludes Migrations, Controllers, `Program.cs` and `DependencyInjection.cs` from Sonar coverage.
+- CI only runs what a push or PR changes: each workflow (`dotnet.yml`, `frontend-ci.yml`, `mobile.yml`) first calls `changes.yml`, which outputs `backend`/`frontend`/`mobile` from path patterns, and its jobs skip otherwise (a skipped job still satisfies the required `Build & Test` check; trigger `paths:` filters would leave it pending). Backend changes also run the frontend's E2E suite. Release tags and manual runs build everything. Update the patterns in `changes.yml` when an area starts reading new files.
 
 ## Frontend architecture (`Frontend/src/app/`)
 
@@ -79,7 +80,7 @@ Follow `Frontend/AGENTS.md` for Angular code. Key rules: standalone components (
 
 .NET MAUI app for iOS and Android. It talks to the same API.
 
-It is still in development, so it is kept out of CI and deploys: it is not in `SSSKL.slnx` (backend CI, Sonar and the App Service deploy don't build or test it) and has its own solution `Mobile/SSSKL.Mobile.slnx`. Build the MAUI app explicitly with `-f net11.0-android|net11.0-ios`.
+It is not in `SSSKL.slnx` (backend CI, its Sonar project and the App Service deploy don't build it) and has its own solution `Mobile/SSSKL.Mobile.slnx`, CI (`mobile.yml`) and SonarCloud project. Build the MAUI app explicitly with `-f net11.0-android|net11.0-ios`.
 
 **Projects**
 - **`SSSKL.Mobile.Core`** (net11.0, no MAUI): the API client (`Api/SssklApiClient`, client-side DTO copies in `Models/`), auth, popup coordinators, view models (CommunityToolkit.Mvvm), Dutch strings (`Localization/Texts`) and the WebView rules (`Web/`).
@@ -136,10 +137,11 @@ Release builds default to `https://ssskl.scoutingwilo.nl`.
   - compiled bindings with `x:DataType`
   - JSON only through the source-generated `ApiJsonContext` in Core; add new DTO types there
 - `SSSKL.Mobile.Core` has `IsAotCompatible` set, so the analyzers flag reflection use.
-- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml` (Core tests and an Android build, plus an unsigned iOS simulator build). For now it only runs by hand (`workflow_dispatch`); the comment in the file shows the push/PR triggers to restore once the app is ready.
+- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml`: Core tests, a Release Android build, an unsigned iOS simulator build, and the SonarCloud analysis (`SSSKLv2_Mobile`, on the `xcode-27` runner because only macOS builds both platforms; coverage counts Core only, via `Mobile/coverage.runsettings`).
 
 **Store releases**
 - `.github/workflows/mobile-release.yml` runs on the same `vX.Y.Z` tag as the API. It builds and signs each app once, then moves that build through approval-gated environments: TestFlight → App Store and Play internal testing → production. Pre-release tags stop after testing.
+- After Play internal testing, `android-github` attaches the signed universal `.apk` to the tag's GitHub release (`SSSKL-X.Y.Z.apk`, a pre-release for pre-release tags) for Obtainium.
 - The uploads use fastlane (`Mobile/Gemfile`, `Mobile/fastlane/Fastfile`).
 - The display version is the tag's numbers (`ApplicationDisplayVersion` = `_SssklNumericVersion`). The build number is run number + 1000 (`-p:ApplicationVersion`).
 - iOS jobs run on the `xcode-27` runner image with Xcode 27.2; it has no .NET 11, so `setup-dotnet` installs it.
