@@ -8,11 +8,12 @@ How the MAUI app (`Mobile/`) gets to TestFlight, the App Store and Google Play. 
 
 ```
 build-android ──► android-internal (approve) ──► android-production (approve, stable tags only)
+                                             └─► android-github (signed .apk on the GitHub release, for Obtainium)
 build-ios     ──► ios-testflight   (approve) ──► ios-app-store      (approve, stable tags only)
 ```
 
 1. **Build** (no approval): each app is tested (Core), built, signed and stored as a workflow artifact (`android-aab`, `ios-ipa`). Symbols go to Sentry (`ssskl-mobile`) and to the stores: the `.ipa` carries a `Symbols/` folder for App Store Connect (the build fails without it), and the Android job zips the unstripped Native AOT library (`native-debug-symbols.zip`, uploaded with the bundle as native debug symbols); the R8 mapping for Java frames is already inside the `.aab`.
-2. **Testing** (approve in the run): the `.aab` goes to the Play **internal testing** track; the `.ipa` goes to **TestFlight** for internal testers.
+2. **Testing** (approve in the run): the `.aab` goes to the Play **internal testing** track; the `.ipa` goes to **TestFlight** for internal testers. Right after internal testing, `android-github` attaches the signed universal `.apk` to the tag's GitHub release as `SSSKL-<version>.apk` (see [Obtainium](#obtainium)).
 3. **Production** (approve after testing): the same build is promoted from internal testing to **production** (Google reviews it), and attached to a new App Store version that is **submitted for App Review**. After Apple approves it, press *Release* in App Store Connect.
 
 A pre-release tag (`v1.5.0-rc.1`) stops after step 2. If a release needs no new app, reject its pending approvals; a pending approval expires after 30 days.
@@ -64,6 +65,16 @@ Settings → Environments. Restrict every environment to tags matching `v*` (*De
 | `android-production` | Ricardo | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` |
 
 Optional repository variable: `ANDROID_PRODUCTION_ROLLOUT`, for example `0.2` for a staged rollout to 20% of users. Without it, the release goes to everyone. `SENTRY_AUTH_TOKEN` is already a repository secret.
+
+## Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installs and updates Android apps straight from their GitHub releases. Every release tag gets the signed universal `.apk` (arm64 and x86_64) built for Google Play, attached to the GitHub release `vX.Y.Z` as `SSSKL-X.Y.Z.apk`. If you haven't created the release by hand yet, the job creates it with generated notes. Pre-release tags get a GitHub pre-release, which Obtainium skips unless *Include prereleases* is on.
+
+Users add the app with this link (opens Obtainium, or its web page if Obtainium isn't installed):
+<https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/ricardotill/SSSKLv2>
+Or in Obtainium: *Add app* → `https://github.com/ricardotill/SSSKLv2`.
+
+**Signing:** the `.apk` is signed with the **upload key**, but Play App Signing re-signs Play installs with Google's app signing key. Android only updates an app with the same signature, so a user can't switch between Play and Obtainium without uninstalling (that wipes the app's login). The `android-github` job summary shows the certificate's SHA-256 fingerprint, for anyone who wants to verify the download (e.g. with AppVerifier).
 
 ## Store screenshots
 

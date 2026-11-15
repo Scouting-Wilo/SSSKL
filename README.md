@@ -8,6 +8,10 @@
 
 SSSKLv2 is a modern, full-stack management and Point of Sale (POS) system designed for clubs and organizations. It provides a seamless interface for managing products, users, events, and financial transactions, with a focus on ease of use and visual excellence.
 
+**Android app:** install it with Obtainium, which installs and updates it from the GitHub releases.
+
+<a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/ricardotill/SSSKLv2"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54"></a>
+
 ---
 
 ## 🚀 Key Features
@@ -123,6 +127,7 @@ When running in Development mode, you can access the interactive Scalar API docu
 - **Releases**: push a tag `vX.Y.Z` on master; the version comes from the tag (see [docs/docker.md](docs/docker.md#releases)).
 - **Frontend**: Deployed to **Azure Static Web Apps**, and published as the Docker image `ghcr.io/ricardotill/ssskl-frontend`.
 - **Backend**: Deployed to **Azure App Service**, and published as the Docker image `ghcr.io/ricardotill/ssskl-api`.
+- **Mobile app**: released to the App Store and Google Play, and as a signed `.apk` on every GitHub release for [Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/ricardotill/SSSKLv2) (see [docs/mobile-release.md](docs/mobile-release.md#obtainium)).
 - **Docker**: run the whole stack with `docker compose up -d` (see [docs/docker.md](docs/docker.md)).
 - **CI/CD**: Automated via GitHub Actions (see `.github/workflows`).
 
