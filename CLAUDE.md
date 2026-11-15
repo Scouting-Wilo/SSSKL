@@ -149,7 +149,7 @@ Release builds default to `https://ssskl.scoutingwilo.nl`.
 
 ## Error monitoring (Sentry)
 
-Sentry org `ricardo-tillemans` (EU region). One project per app: `ssskl-api`, `ssskl-frontend`, `ssskl-mobile`. The DSNs are public client keys and are committed.
+Sentry org `scouting-wilo` (EU region). One project per app: `ssskl-api`, `ssskl-frontend`, `ssskl-mobile`. The DSNs are public client keys and are committed.
 
 **Where each app sets it up**
 - **API:** `Sentry.AspNetCore`, configured in `SSSKL.Web/Program.cs` and the `Sentry` section of `appsettings.json`.
