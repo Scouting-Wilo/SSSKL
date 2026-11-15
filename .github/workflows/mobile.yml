@@ -5,7 +5,7 @@
 #   test           Core tests (net11.0, no workload)
 #   build-android  Release build (Native AOT), like the store build
 #   build-ios      Release build for the simulator, unsigned
-#   scan           SonarCloud project SSSKLv2_Mobile: one Debug build of the whole solution, both platforms
+#   scan           SonarCloud project Scouting-Wilo_SSSKL_Mobile: one Debug build of the whole solution, both platforms
 #                  (Android and iOS code only compile in their own target framework), plus Core's coverage
 name: Mobile CI
 
@@ -190,8 +190,8 @@ jobs:
       # otherwise fail the new-code coverage condition on every UI change. It is still analyzed for issues.
       run: |
         dotnet-sonarscanner begin \
-          /k:"SSSKLv2_Mobile" \
-          /o:"ricardotill" \
+          /k:"Scouting-Wilo_SSSKL_Mobile" \
+          /o:"scouting-wilo" \
           /d:sonar.token="$SONAR_TOKEN" \
           /d:sonar.host.url="https://sonarcloud.io" \
           /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \

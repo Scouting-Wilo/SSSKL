@@ -2,7 +2,7 @@
 # changes.yml; a version tag always builds), and runs the Playwright E2E suite against the real API. A change to
 # only the backend runs just the E2E suite, since it tests the API too. On master and on version tags it then
 # pushes the web app's Docker image (the SPA served by Caddy, linux/amd64 and linux/arm64) to
-# ghcr.io/ricardotill/ssskl-frontend; a pull request only checks that the image builds. Image tags: see
+# ghcr.io/scouting-wilo/ssskl-frontend; a pull request only checks that the image builds. Image tags: see
 # dotnet.yml. See docs/docker.md.
 #
 # Dependabot PRs (rebased on every master push) get a lean run: no E2E, test & build only for npm, Docker and
@@ -26,7 +26,7 @@ permissions:
 
 env:
   # The registry wants a lower-case name
-  IMAGE: ghcr.io/ricardotill/ssskl-frontend
+  IMAGE: ghcr.io/scouting-wilo/ssskl-frontend
 
 jobs:
   changes:

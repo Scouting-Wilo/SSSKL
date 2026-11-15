@@ -5,7 +5,7 @@ namespace SSSKL.Mobile.Views;
 public partial class AboutPage : ContentPage
 {
     private static readonly Uri AuthorUrl = new("https://ricardotill.nl");
-    private static readonly Uri GitHubUrl = new("https://github.com/ricardotill/SSSKLv2");
+    private static readonly Uri GitHubUrl = new("https://github.com/Scouting-Wilo/SSSKL");
 
     public AboutPage()
     {

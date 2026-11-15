@@ -1,6 +1,6 @@
 # Builds and tests the backend on every push to master, version tag and pull request that changes it (see
 # changes.yml; a version tag always builds). On master and on version tags it then pushes the API's Docker image
-# (linux/amd64 and linux/arm64) to ghcr.io/ricardotill/ssskl-api; a pull request only checks that the image
+# (linux/amd64 and linux/arm64) to ghcr.io/scouting-wilo/ssskl-api; a pull request only checks that the image
 # builds. See docs/docker.md. Without backend changes every job is skipped, which still satisfies the required
 # "Build & Test" check.
 #
@@ -30,7 +30,7 @@ permissions:
 env:
   DOTNET_VERSION: '11.0.x'                 # set this to the .NET Core version to use
   # The registry wants a lower-case name
-  IMAGE: ghcr.io/ricardotill/ssskl-api
+  IMAGE: ghcr.io/scouting-wilo/ssskl-api
 
 jobs:
   changes:
@@ -126,8 +126,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin \
-            /k:"SSSKLv2_Backend" \
-            /o:"ricardotill" \
+            /k:"Scouting-Wilo_SSSKL_Backend" \
+            /o:"scouting-wilo" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.opencover.reportsPaths="**/*.opencover.xml" \

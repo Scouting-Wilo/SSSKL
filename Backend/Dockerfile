@@ -2,7 +2,7 @@
 # Build from the repository root (it needs Directory.Build.props, Directory.Packages.props and the license):
 #   docker buildx build -f Backend/Dockerfile --secret id=sixlabors_lic,src=sixlabors.lic --build-arg VERSION=1.2.3 .
 # CI (.github/workflows/dotnet.yml) builds it for linux/amd64 and linux/arm64 and pushes it to
-# ghcr.io/ricardotill/ssskl-api. Run it with docker-compose.yml or docker-compose.external.yml; see docs/docker.md.
+# ghcr.io/scouting-wilo/ssskl-api. Run it with docker-compose.yml or docker-compose.external.yml; see docs/docker.md.
 
 # The build stage always runs on the machine's own platform and cross-compiles for the target one,
 # so an arm64 image needs no slow emulation; only the final stage is per architecture.
@@ -33,7 +33,7 @@ RUN --mount=type=secret,id=sixlabors_lic,target=/repo/sixlabors.lic \
 FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 ARG VERSION=0.0.0-local
 LABEL org.opencontainers.image.title="SSSKL API" \
-      org.opencontainers.image.source="https://github.com/ricardotill/SSSKLv2" \
+      org.opencontainers.image.source="https://github.com/Scouting-Wilo/SSSKL" \
       org.opencontainers.image.version=$VERSION
 WORKDIR /app
 COPY --from=build /app .

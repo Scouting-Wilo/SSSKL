@@ -33,7 +33,7 @@ import { NgOptimizedImage } from '@angular/common';
             
             <div class="mt-8">
               <a 
-                href="https://github.com/ricardotill/SSSKLv2" 
+                href="https://github.com/Scouting-Wilo/SSSKL" 
                 target="_blank" 
                 class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 rounded-full hover:bg-surface-200 dark:hover:bg-surface-700 transition-colors shadow-sm ring-1 ring-surface-200 dark:ring-surface-700 hover:ring-primary/50"
               >
