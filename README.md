@@ -1,4 +1,4 @@
-# SSSKLv2
+# SSSKL
 
 | Component | Quality Gate | Coverage |
 | :--- | :--- | :--- |
@@ -6,7 +6,7 @@
 | **Frontend** | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Scouting-Wilo_SSSKL_Frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Scouting-Wilo_SSSKL_Frontend) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Scouting-Wilo_SSSKL_Frontend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Scouting-Wilo_SSSKL_Frontend) |
 
 
-SSSKLv2 is a modern, full-stack management and Point of Sale (POS) system designed for clubs and organizations. It provides a seamless interface for managing products, users, events, and financial transactions, with a focus on ease of use and visual excellence.
+SSSKL is a modern, full-stack management and Point of Sale (POS) system designed for clubs and organizations. It provides a seamless interface for managing products, users, events, and financial transactions, with a focus on ease of use and visual excellence.
 
 **Android app:** install it with Obtainium, which installs and updates it from the GitHub releases.
 

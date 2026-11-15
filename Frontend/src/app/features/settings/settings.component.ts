@@ -546,7 +546,7 @@ export default class SettingsComponent {
     const identity = this.identityInfo();
 
     if (tfa && !tfa.isTwoFactorEnabled && identity?.email) {
-      const uri = `otpauth://totp/SSSKLv2:${encodeURIComponent(identity.email)}?secret=${tfa.sharedKey}&issuer=SSSKLv2`;
+      const uri = `otpauth://totp/SSSKL:${encodeURIComponent(identity.email)}?secret=${tfa.sharedKey}&issuer=SSSKL`;
       QRCode.toDataURL(uri, { width: 200, margin: 1, color: { dark: '#000000', light: '#ffffff' } })
         .then(url => {
           this.qrCodeDataUrl.set(url);

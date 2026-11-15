@@ -29,7 +29,7 @@ import { NativeBridgeService } from './core/services/native-bridge.service';
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('SSSKLv2');
+  protected readonly title = signal('SSSKL');
   private themeService = inject(ThemeService);
   private primeng = inject(PrimeNG);
   private authService = inject(AuthService);
