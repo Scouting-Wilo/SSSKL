@@ -6,7 +6,7 @@ using SSSKL.Domain.Entities;
 
 namespace SSSKL.Infrastructure.Agents;
 
-public class BlobStorageAgent : IBlobStorageAgent
+public partial class BlobStorageAgent : IBlobStorageAgent
 {
     private readonly string _blobContainerName;
     private readonly BlobServiceClient _storage;
@@ -37,10 +37,7 @@ public class BlobStorageAgent : IBlobStorageAgent
         await blob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
         await blob.UploadAsync(fileStream, new BlobHttpHeaders { ContentType = normalizedContentType });
         var urlString = blob.Uri.ToString();
-        if (_logger.IsEnabled(LogLevel.Information))
-        {
-            _logger.LogInformation("File uploaded to Blob Storage: {FileName} ({ContentType})", strFileName, normalizedContentType);
-        }
+        LogFileUploaded(_logger, strFileName, normalizedContentType);
         return new BlobStorageItem() { FileName = strFileName, Uri = urlString, ContentType = normalizedContentType };
     }
 
@@ -52,10 +49,7 @@ public class BlobStorageAgent : IBlobStorageAgent
             await container.SetAccessPolicyAsync(PublicAccessType.None);
         var blob = container.GetBlobClient(strFileName);
         await blob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
-        if (_logger.IsEnabled(LogLevel.Information))
-        {
-            _logger.LogInformation("File deleted from Blob Storage: {FileName}", strFileName);
-        }
+        LogFileDeleted(_logger, strFileName);
         return true;
     }
 
@@ -65,4 +59,10 @@ public class BlobStorageAgent : IBlobStorageAgent
         var blob = container.GetBlobClient(strFileName);
         return await blob.OpenReadAsync();
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "File uploaded to Blob Storage: {FileName} ({ContentType})")]
+    private static partial void LogFileUploaded(ILogger logger, string fileName, string contentType);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "File deleted from Blob Storage: {FileName}")]
+    private static partial void LogFileDeleted(ILogger logger, string fileName);
 }

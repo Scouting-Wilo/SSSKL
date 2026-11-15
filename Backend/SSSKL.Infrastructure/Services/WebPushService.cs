@@ -11,7 +11,7 @@ using SSSKL.Infrastructure.Persistence;
 
 namespace SSSKL.Infrastructure.Services;
 
-public class WebPushService : IWebPushService
+public partial class WebPushService : IWebPushService
 {
     private static readonly int[] VibratePattern = [100, 50, 100];
 
@@ -120,10 +120,7 @@ public class WebPushService : IWebPushService
                     // Subscription is no longer valid, remove it
                     _context.PushSubscription.Remove(subscription);
                     SssklTelemetry.RecordPush("expired");
-                    if (_logger.IsEnabled(LogLevel.Information))
-                    {
-                        _logger.LogInformation("Removing invalid push subscription for user {UserId}. Reason: {PushReason}", userId, pushReason ?? "Gone/NotFound");
-                    }
+                    LogRemovingSubscription(_logger, userId, pushReason ?? "Gone/NotFound");
                 }
                 else
                 {
@@ -145,4 +142,7 @@ public class WebPushService : IWebPushService
     {
         await _pushServiceClient.RequestPushMessageDeliveryAsync(subscription, message);
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Removing invalid push subscription for user {UserId}. Reason: {PushReason}")]
+    private static partial void LogRemovingSubscription(ILogger logger, string userId, string pushReason);
 }
