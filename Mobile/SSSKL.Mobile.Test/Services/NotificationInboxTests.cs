@@ -10,6 +10,8 @@ namespace SSSKL.Mobile.Test.Services;
 [TestClass]
 public class NotificationInboxTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private readonly ISssklApi _api = Substitute.For<ISssklApi>();
 
     private NotificationInbox CreateSut() => new(_api, NullLogger<NotificationInbox>.Instance);
@@ -25,7 +27,7 @@ public class NotificationInboxTests
         var sut = CreateSut();
 
         // Act
-        await sut.RefreshAsync();
+        await sut.RefreshAsync(TestContext.CancellationToken);
 
         // Assert
         sut.UnreadCount.Should().Be(count);
@@ -38,11 +40,11 @@ public class NotificationInboxTests
         // Arrange
         _api.GetUnreadNotificationCountAsync(Arg.Any<CancellationToken>()).Returns(2, 0);
         var sut = CreateSut();
-        await sut.RefreshAsync();
+        await sut.RefreshAsync(TestContext.CancellationToken);
         _api.GetUnreadNotificationCountAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("offline"));
 
         // Act
-        var act = () => sut.RefreshAsync();
+        var act = () => sut.RefreshAsync(TestContext.CancellationToken);
 
         // Assert
         await act.Should().NotThrowAsync();
@@ -55,7 +57,7 @@ public class NotificationInboxTests
         // Arrange
         _api.GetUnreadNotificationCountAsync(Arg.Any<CancellationToken>()).Returns(1);
         var sut = CreateSut();
-        await sut.RefreshAsync();
+        await sut.RefreshAsync(TestContext.CancellationToken);
 
         // Act
         sut.MarkedRead();
@@ -73,7 +75,7 @@ public class NotificationInboxTests
         var pending = new TaskCompletionSource<int>();
         _api.GetUnreadNotificationCountAsync(Arg.Any<CancellationToken>()).Returns(pending.Task);
         var sut = CreateSut();
-        var refresh = sut.RefreshAsync();
+        var refresh = sut.RefreshAsync(TestContext.CancellationToken);
 
         // Act
         sut.Clear();
@@ -94,7 +96,7 @@ public class NotificationInboxTests
         sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
         // Act
-        await sut.RefreshAsync();
+        await sut.RefreshAsync(TestContext.CancellationToken);
 
         // Assert
         changed.Should().Contain(nameof(NotificationInbox.BadgeText));

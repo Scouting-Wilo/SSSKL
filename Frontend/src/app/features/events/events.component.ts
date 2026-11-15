@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   inject,
   signal,
-  OnInit,
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -237,7 +236,7 @@ import { UserProfileDrawerService } from '../../core/services/user-profile-drawe
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class EventsComponent implements OnInit {
+export default class EventsComponent {
   private readonly eventService = inject(EventService);
   private readonly authService = inject(AuthService);
   drawerService = inject(UserProfileDrawerService);
@@ -261,10 +260,6 @@ export default class EventsComponent implements OnInit {
   isPassed(date?: string): boolean {
     if (!date) return false;
     return new Date(date) < new Date();
-  }
-
-  ngOnInit(): void {
-    // Initial load will be triggered by DataView onLazyLoad
   }
 
   onLazyLoad(event: DataViewLazyLoadEvent): void {

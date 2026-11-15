@@ -10,7 +10,7 @@ using SSSKL.Infrastructure.Persistence;
 
 namespace SSSKL.Infrastructure.Services;
 
-public class SmtpEmailSender : IEmailSender<ApplicationUser>
+public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
 {
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
     private readonly ILogger<SmtpEmailSender> _logger;
@@ -39,7 +39,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
                 $"Gebruik de onderstaande code om je wachtwoord te herstellen. Deze code is beperkt geldig.<br/><br/><div style='font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #2563eb;'>{resetCode}</div>",
                 null, null));
 
-    private string GetHtmlTemplate(string title, string message, string? buttonUrl = null, string? buttonText = null)
+    private static string GetHtmlTemplate(string title, string message, string? buttonUrl = null, string? buttonText = null)
     {
         // Emerald palette — matches the frontend PrimeNG Aura preset
         // primary-500: #10b981  primary-600: #059669  primary-800: #065f46
@@ -128,7 +128,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             using var client = new SmtpClient();
 
             // Log connection attempt details (excluding password)
-            _logger.LogInformation("Attempting to connect to SMTP server: {Host}:{Port} as {User}", smtpServer, smtpPort, username);
+            LogConnecting(_logger, smtpServer, smtpPort, username);
 
             var security = smtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
@@ -137,7 +137,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             var result = await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Email sent successfully to {Email}. SMTP response: {SmtpResponse}", email, result.ResponseText);
+            LogEmailSent(_logger, email, result.ResponseText);
         }
         catch (System.Net.Sockets.SocketException socketEx)
         {
@@ -150,4 +150,10 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             throw;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Attempting to connect to SMTP server: {Host}:{Port} as {User}")]
+    private static partial void LogConnecting(ILogger logger, string? host, int port, string? user);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email sent successfully to {Email}. SMTP response: {SmtpResponse}")]
+    private static partial void LogEmailSent(ILogger logger, string email, string smtpResponse);
 }

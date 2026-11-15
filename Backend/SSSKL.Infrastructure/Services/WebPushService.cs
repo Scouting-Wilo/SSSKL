@@ -11,8 +11,10 @@ using SSSKL.Infrastructure.Persistence;
 
 namespace SSSKL.Infrastructure.Services;
 
-public class WebPushService : IWebPushService
+public partial class WebPushService : IWebPushService
 {
+    private static readonly int[] VibratePattern = [100, 50, 100];
+
     private readonly IConfiguration _configuration;
     private readonly ApplicationDbContext _context;
     private readonly PushServiceClient _pushServiceClient;
@@ -45,7 +47,7 @@ public class WebPushService : IWebPushService
             .Where(s => s.UserId == userId)
             .ToListAsync();
 
-        if (!subscriptions.Any())
+        if (subscriptions.Count == 0)
         {
             return;
         }
@@ -58,7 +60,7 @@ public class WebPushService : IWebPushService
                 body = message,
                 icon = "/assets/icons/icon-192x192.png",
                 badge = "/assets/icons/icon-72x72.png",
-                vibrate = new int[] { 100, 50, 100 },
+                vibrate = VibratePattern,
                 data = new
                 {
                     url = url ?? "/",
@@ -118,7 +120,7 @@ public class WebPushService : IWebPushService
                     // Subscription is no longer valid, remove it
                     _context.PushSubscription.Remove(subscription);
                     SssklTelemetry.RecordPush("expired");
-                    _logger.LogInformation("Removing invalid push subscription for user {UserId}. Reason: {PushReason}", userId, pushReason ?? "Gone/NotFound");
+                    LogRemovingSubscription(_logger, userId, pushReason ?? "Gone/NotFound");
                 }
                 else
                 {
@@ -140,4 +142,7 @@ public class WebPushService : IWebPushService
     {
         await _pushServiceClient.RequestPushMessageDeliveryAsync(subscription, message);
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Removing invalid push subscription for user {UserId}. Reason: {PushReason}")]
+    private static partial void LogRemovingSubscription(ILogger logger, string userId, string pushReason);
 }

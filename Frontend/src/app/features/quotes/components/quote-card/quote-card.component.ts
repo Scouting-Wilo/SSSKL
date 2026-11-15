@@ -125,7 +125,7 @@ import { TooltipModule } from 'primeng/tooltip';
                 [rounded]="true"
                 severity="secondary"
                 size="small"
-                (onClick)="$event.stopPropagation(); onEdit.emit(quote)"
+                (onClick)="$event.stopPropagation(); edit.emit(quote)"
               />
             }
             @if (canDelete) {
@@ -135,7 +135,7 @@ import { TooltipModule } from 'primeng/tooltip';
                 [rounded]="true"
                 severity="danger"
                 size="small"
-                (onClick)="$event.stopPropagation(); onDelete.emit(quote)"
+                (onClick)="$event.stopPropagation(); remove.emit(quote)"
               />
             }
           </div>
@@ -158,9 +158,9 @@ export class QuoteCardComponent {
   @Input() canDelete = false;
   @Input() showCreator = true;
 
-  @Output() onEdit = new EventEmitter<QuoteDto>();
-  @Output() onDelete = new EventEmitter<QuoteDto>();
-  @Output() onVote = new EventEmitter<QuoteDto>();
+  @Output() edit = new EventEmitter<QuoteDto>();
+  @Output() remove = new EventEmitter<QuoteDto>();
+  @Output() voted = new EventEmitter<QuoteDto>();
 
   ls = inject(LanguageService);
   drawerService = inject(UserProfileDrawerService);
@@ -170,7 +170,7 @@ export class QuoteCardComponent {
   toggleVote(event: MouseEvent): void {
     event.stopPropagation();
     this.quoteService.toggleVote(this.quote.id).subscribe(() => {
-      this.onVote.emit(this.quote);
+      this.voted.emit(this.quote);
     });
   }
 

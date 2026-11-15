@@ -10,8 +10,11 @@ using SSSKL.Web.Controllers.v1;
 namespace SSSKL.Web.Test.Controllers;
 
 [TestClass]
-public class PublicControllerTests
+public partial class PublicControllerTests
 {
+    [GeneratedRegex(@"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$")]
+    private static partial Regex SemVerRegex();
+
     private PublicController _sut = null!;
     private IConfiguration _mockConfiguration = null!;
 
@@ -93,7 +96,7 @@ public class PublicControllerTests
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var version = okResult.Value.Should().BeOfType<VersionDto>().Subject;
-        Regex.IsMatch(version.Version, @"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$")
+        SemVerRegex().IsMatch(version.Version)
             .Should()
             .BeTrue();
     }

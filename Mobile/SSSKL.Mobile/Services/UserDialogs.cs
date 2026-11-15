@@ -34,8 +34,10 @@ public sealed class UserDialogs : IUserDialogs
     {
         get
         {
-            var page = Application.Current?.Windows.FirstOrDefault()?.Page;
-            return page?.Navigation.ModalStack.LastOrDefault() ?? page;
+            var windows = Application.Current?.Windows;
+            var page = windows is { Count: > 0 } ? windows[0].Page : null;
+            var modals = page?.Navigation.ModalStack;
+            return modals is { Count: > 0 } ? modals[^1] : page;
         }
     }
 }

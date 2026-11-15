@@ -40,7 +40,7 @@ public class ProfileViewModelTests
         // Assert
         await act.Should().NotThrowAsync();
         await _dialogs.Received(1).AlertAsync(Texts.Error, Texts.ProfilePictureFailed);
-        await _api.DidNotReceiveWithAnyArgs().UploadProfilePictureAsync(default!);
+        await _api.DidNotReceiveWithAnyArgs().UploadProfilePictureAsync(default!, default);
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class ProfileViewModelTests
 
         // Assert
         await _dialogs.DidNotReceiveWithAnyArgs().AlertAsync(default!, default!);
-        await _api.DidNotReceiveWithAnyArgs().UploadProfilePictureAsync(default!);
+        await _api.DidNotReceiveWithAnyArgs().UploadProfilePictureAsync(default!, default);
     }
 
     [TestMethod]
@@ -63,14 +63,14 @@ public class ProfileViewModelTests
     {
         // Arrange
         _photoPicker.PickAsync().Returns(new PickedPhoto("foto.jpg", "image/jpeg", [1, 2, 3]));
-        _api.GetMeAsync().Returns(new CurrentUser { Id = "1", FullName = "Ik Zelf", Roles = [RoleNames.User] });
+        _api.GetMeAsync(Arg.Any<CancellationToken>()).Returns(new CurrentUser { Id = "1", FullName = "Ik Zelf", Roles = [RoleNames.User] });
         var sut = CreateSut();
 
         // Act
         await sut.ChangePictureCommand.ExecuteAsync(null);
 
         // Assert
-        await _api.Received(1).UploadProfilePictureAsync(Arg.Is<Base64FileUpload>(f => f.FileName == "foto.jpg" && f.Base64Content == "AQID"));
+        await _api.Received(1).UploadProfilePictureAsync(Arg.Is<Base64FileUpload>(f => f.FileName == "foto.jpg" && f.Base64Content == "AQID"), Arg.Any<CancellationToken>());
         await _dialogs.Received(1).ToastAsync(Texts.ProfilePictureUpdated);
     }
 
@@ -93,7 +93,7 @@ public class ProfileViewModelTests
     public async Task PictureActions_Remove_DeletesWithoutASecondConfirmation()
     {
         // Arrange
-        _api.GetMeAsync().Returns(new CurrentUser { Id = "1", FullName = "Ik Zelf", Roles = [RoleNames.User] });
+        _api.GetMeAsync(Arg.Any<CancellationToken>()).Returns(new CurrentUser { Id = "1", FullName = "Ik Zelf", Roles = [RoleNames.User] });
         _dialogs.ActionSheetAsync(Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string[]>())
             .Returns(Texts.RemoveProfilePicture);
         var sut = CreateSut();
@@ -103,7 +103,7 @@ public class ProfileViewModelTests
         await sut.PictureActionsCommand.ExecuteAsync(null);
 
         // Assert
-        await _api.Received(1).DeleteProfilePictureAsync();
+        await _api.Received(1).DeleteProfilePictureAsync(Arg.Any<CancellationToken>());
         await _dialogs.DidNotReceiveWithAnyArgs().ConfirmAsync(default!, default!, default!, default!);
     }
 
@@ -120,7 +120,7 @@ public class ProfileViewModelTests
         await sut.PictureActionsCommand.ExecuteAsync(null);
 
         // Assert
-        await _api.DidNotReceiveWithAnyArgs().DeleteProfilePictureAsync();
+        await _api.DidNotReceiveWithAnyArgs().DeleteProfilePictureAsync(default);
         await _photoPicker.DidNotReceiveWithAnyArgs().PickAsync();
     }
 
@@ -144,7 +144,7 @@ public class ProfileViewModelTests
     public async Task SaveDescriptionCommand_SendsOnlyTheDescriptionAsHtml()
     {
         // Arrange
-        _api.GetMeAsync().Returns(new CurrentUser { Id = "1", FullName = "Jan" });
+        _api.GetMeAsync(Arg.Any<CancellationToken>()).Returns(new CurrentUser { Id = "1", FullName = "Jan" });
         var sut = CreateSut();
         sut.EditDescriptionCommand.Execute(null);
         sut.DescriptionDraft = "Hoi & doei";

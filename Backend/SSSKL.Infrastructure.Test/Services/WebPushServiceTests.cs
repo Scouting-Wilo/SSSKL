@@ -18,6 +18,10 @@ namespace SSSKL.Infrastructure.Test.Services;
 [TestClass]
 public class WebPushServiceTests : RepositoryTest
 {
+    private static readonly int[] VibratePattern = [100, 50, 100];
+
+    public TestContext TestContext { get; set; } = null!;
+
     private ApplicationDbContext _dbContext = null!;
     private IConfiguration _configuration = null!;
     private ILogger<WebPushService> _logger = null!;
@@ -119,12 +123,12 @@ public class WebPushServiceTests : RepositoryTest
 
         AddSubscriptionForUser(user1, "https://endpoint-user1.example.com");
         AddSubscriptionForUser(user2, "https://endpoint-user2.example.com");
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(TestContext.CancellationToken);
 
         // We retrieve from DB to verify EF filtering — create a fresh context
         using var freshContext = new ApplicationDbContext(GetOptions());
-        var user1Subs = await freshContext.PushSubscription.Where(s => s.UserId == user1).ToListAsync();
-        var user2Subs = await freshContext.PushSubscription.Where(s => s.UserId == user2).ToListAsync();
+        var user1Subs = await freshContext.PushSubscription.Where(s => s.UserId == user1).ToListAsync(TestContext.CancellationToken);
+        var user2Subs = await freshContext.PushSubscription.Where(s => s.UserId == user2).ToListAsync(TestContext.CancellationToken);
 
         // Assert
         user1Subs.Should().HaveCount(1);
@@ -188,7 +192,7 @@ public class WebPushServiceTests : RepositoryTest
                 body,
                 icon = "/assets/icons/icon-192x192.png",
                 badge = "/assets/icons/icon-72x72.png",
-                vibrate = new int[] { 100, 50, 100 },
+                vibrate = VibratePattern,
                 data = new
                 {
                     url = url ?? "/",
@@ -231,7 +235,7 @@ public class WebPushServiceTests : RepositoryTest
         // Arrange
         var user = TestUser.Id;
         var sub = AddSubscriptionForUser(user, "https://push.example.com/expired");
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(TestContext.CancellationToken);
 
         var sut = CreateSut(partialMock: true);
 
@@ -247,7 +251,7 @@ public class WebPushServiceTests : RepositoryTest
         await sut.SendNotificationAsync(user, "Title", "Message");
 
         // Assert
-        var resultSub = await _dbContext.PushSubscription.FirstOrDefaultAsync(s => s.Id == sub.Id);
+        var resultSub = await _dbContext.PushSubscription.FirstOrDefaultAsync(s => s.Id == sub.Id, TestContext.CancellationToken);
         resultSub.Should().BeNull();
     }
 
@@ -257,7 +261,7 @@ public class WebPushServiceTests : RepositoryTest
         // Arrange
         var user = TestUser.Id;
         AddSubscriptionForUser(user);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(TestContext.CancellationToken);
 
         var sut = CreateSut(partialMock: true);
         PushMessage? capturedMessage = null;
@@ -279,7 +283,7 @@ public class WebPushServiceTests : RepositoryTest
         // Arrange
         var user = TestUser.Id;
         AddSubscriptionForUser(user);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync(TestContext.CancellationToken);
 
         var sut = CreateSut(partialMock: true);
 

@@ -20,6 +20,8 @@ namespace SSSKL.Infrastructure.Test.Persistence.Repositories;
 [TestClass]
 public class ApplicationUserRepositoryTests : RepositoryTest
 {
+    private static readonly string[] TestIds = ["testid"];
+
     private MockDbContextFactory _dbContextFactory = null!;
     private ApplicationUserRepository _sut = null!;
 
@@ -488,7 +490,7 @@ public class ApplicationUserRepositoryTests : RepositoryTest
     {
         // Arrange
         var mockFactory = Substitute.For<IDbContextFactory<ApplicationDbContext>>();
-        mockFactory.CreateDbContextAsync().Returns(Task.FromException<ApplicationDbContext>(new InvalidOperationException("Database error")));
+        mockFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException<ApplicationDbContext>(new InvalidOperationException("Database error")));
         
         var repository = new ApplicationUserRepository(mockFactory);
         
@@ -497,7 +499,7 @@ public class ApplicationUserRepositoryTests : RepositoryTest
         await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetByUsername("testuser"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetAll());
         await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetAllForAdmin());
-        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetByIds(new[] { "testid" }));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetByIds(TestIds));
         await Assert.ThrowsAsync<InvalidOperationException>(() => repository.GetTopActiveUserIds(10));
     }
     
@@ -511,7 +513,7 @@ public class ApplicationUserRepositoryTests : RepositoryTest
     
     #region Helper Methods
     
-    private ApplicationUser CreateUser(string username, string email, string name, string surname)
+    private static ApplicationUser CreateUser(string username, string email, string name, string surname)
     {
         return new ApplicationUser
         {

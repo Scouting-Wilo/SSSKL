@@ -8,7 +8,7 @@ using SSSKL.Domain.Events;
 
 namespace SSSKL.Application.EventHandlers;
 
-public class AchievementEventHandler(
+public partial class AchievementEventHandler(
     IAchievementRepository achievementRepository,
     IUserStatRepository userStatRepository,
     IProductUserStatRepository productUserStatRepository,
@@ -43,9 +43,12 @@ public class AchievementEventHandler(
         
         // Update MaxOrdersPerHour
         var hourAgo = domainEvent.OccurredOn.AddHours(-1);
-        var orders = await orderRepository.GetPersonal(order.User.UserName);
-        var recentOrdersCount = orders.Count(o => o.CreatedOn >= hourAgo);
-        if (recentOrdersCount > stats.MaxOrdersPerHour) stats.MaxOrdersPerHour = recentOrdersCount;
+        if (order.User.UserName is { } userName)
+        {
+            var orders = await orderRepository.GetPersonal(userName);
+            var recentOrdersCount = orders.Count(o => o.CreatedOn >= hourAgo);
+            if (recentOrdersCount > stats.MaxOrdersPerHour) stats.MaxOrdersPerHour = recentOrdersCount;
+        }
         
         await userStatRepository.Update(stats);
         await UpdateStreak(stats, domainEvent.OccurredOn);
@@ -175,9 +178,12 @@ public class AchievementEventHandler(
 
             if (shouldAward)
             {
-                logger.LogInformation("Awarding achievement {AchievementName} to user {UserId}", achievement.Name, userId);
+                LogAwarding(logger, achievement.Name, userId);
                 await achievementAwarder.AwardToUser(userId, achievement.Id);
             }
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Awarding achievement {AchievementName} to user {UserId}")]
+    private static partial void LogAwarding(ILogger logger, string achievementName, string userId);
 }

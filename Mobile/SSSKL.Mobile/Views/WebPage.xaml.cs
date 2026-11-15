@@ -139,7 +139,8 @@ public partial class WebPage : ContentPage
         {
             return;
         }
-        if (Navigation.NavigationStack.LastOrDefault() == this)
+        var stack = Navigation.NavigationStack;
+        if (stack.Count > 0 && stack[^1] == this)
         {
             await Navigation.PopAsync();
         }

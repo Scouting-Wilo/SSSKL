@@ -64,9 +64,12 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
                 return BadRequest(UnsupportedImageMessage);
             }
 
-            logger.LogInformation(
-                "Event image create accepted: UserId={UserId}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
-                userId, image.FileName, image.ContentType, contentType, image.Length);
+            if (logger.IsEnabled(LogLevel.Information))
+            {
+                logger.LogInformation(
+                    "Event image create accepted: UserId={UserId}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
+                    userId, image.FileName, image.ContentType, contentType, image.Length);
+            }
             dto.ImageContentType = new ContentType(contentType);
             dto.ImageContent = image.OpenReadStream();
         }
@@ -115,9 +118,12 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
         }
 
         var isAdmin = User.IsInRole("Admin");
-        logger.LogInformation(
-            "Event image update accepted for processing: EventId={EventId}, UserId={UserId}, IsAdmin={IsAdmin}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
-            id, userId, isAdmin, image.FileName, image.ContentType, contentType, bytes.Length);
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation(
+                "Event image update accepted for processing: EventId={EventId}, UserId={UserId}, IsAdmin={IsAdmin}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
+                id, userId, isAdmin, image.FileName, image.ContentType, contentType, bytes.Length);
+        }
 
         try
         {

@@ -17,6 +17,8 @@ namespace SSSKL.Infrastructure.Test.Persistence.Repositories;
 [TestClass]
 public class EventRepositoryTests : RepositoryTest
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private ApplicationDbContext _context = null!;
     private EventRepository _repository = null!;
 
@@ -49,8 +51,8 @@ public class EventRepositoryTests : RepositoryTest
             Surname = "User",
             Saldo = 0
         };
-        await _context.Users.AddAsync(creator);
-        await _context.SaveChangesAsync();
+        await _context.Users.AddAsync(creator, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         var pastEventEarly = new Event 
         { 
@@ -98,7 +100,7 @@ public class EventRepositoryTests : RepositoryTest
         };
 
         await _context.Event.AddRangeAsync(pastEventLate, futureEventLate, pastEventEarly, futureEventEarly);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         // Act
         var result = await _repository.GetAll(0, 10, false);
@@ -116,8 +118,8 @@ public class EventRepositoryTests : RepositoryTest
     {
         // Arrange
         var e = new Event { Id = Guid.NewGuid(), Title = "Test", Description = "Desc", StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CreatorId = TestUser.Id };
-        await _context.Event.AddAsync(e);
-        await _context.SaveChangesAsync();
+        await _context.Event.AddAsync(e, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         // Act
         var result = await _repository.GetById(e.Id);
@@ -147,7 +149,7 @@ public class EventRepositoryTests : RepositoryTest
         await _repository.Add(e);
 
         // Assert
-        (await _context.Event.FindAsync(e.Id)).Should().NotBeNull();
+        (await _context.Event.FindAsync([e.Id], TestContext.CancellationToken)).Should().NotBeNull();
     }
 
     [TestMethod]
@@ -155,15 +157,15 @@ public class EventRepositoryTests : RepositoryTest
     {
         // Arrange
         var e = new Event { Id = Guid.NewGuid(), Title = "Test", Description = "Desc", StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CreatorId = TestUser.Id };
-        await _context.Event.AddAsync(e);
-        await _context.SaveChangesAsync();
+        await _context.Event.AddAsync(e, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
         e.Title = "Updated";
 
         // Act
         await _repository.Update(e);
 
         // Assert
-        var updated = await _context.Event.FindAsync(e.Id);
+        var updated = await _context.Event.FindAsync([e.Id], TestContext.CancellationToken);
         updated!.Title.Should().Be("Updated");
     }
 
@@ -193,15 +195,15 @@ public class EventRepositoryTests : RepositoryTest
             RequiredRoles = new List<IdentityRole> { role }
         };
 
-        await _context.Roles.AddAsync(role);
-        await _context.Event.AddAsync(e);
-        await _context.SaveChangesAsync();
+        await _context.Roles.AddAsync(role, TestContext.CancellationToken);
+        await _context.Event.AddAsync(e, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         _context.ChangeTracker.Clear();
         var tracked = await _context.Event
             .Include(x => x.Image)
             .Include(x => x.RequiredRoles)
-            .SingleAsync(x => x.Id == e.Id);
+            .SingleAsync(x => x.Id == e.Id, TestContext.CancellationToken);
 
         tracked.Title = "Updated";
         tracked.Description = "Updated description";
@@ -219,7 +221,7 @@ public class EventRepositoryTests : RepositoryTest
         var updated = await _context.Event
             .Include(x => x.Image)
             .Include(x => x.RequiredRoles)
-            .SingleAsync(x => x.Id == e.Id);
+            .SingleAsync(x => x.Id == e.Id, TestContext.CancellationToken);
 
         updated.Title.Should().Be("Updated");
         updated.Image.Should().NotBeNull();
@@ -231,15 +233,15 @@ public class EventRepositoryTests : RepositoryTest
     {
         // Arrange
         var e = new Event { Id = Guid.NewGuid(), Title = "Test", Description = "Desc", StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CreatorId = TestUser.Id };
-        await _context.Event.AddAsync(e);
-        await _context.SaveChangesAsync();
+        await _context.Event.AddAsync(e, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         // Act
         await _repository.Delete(e.Id);
 
         // Assert
         await using var verificationContext = new ApplicationDbContext(GetOptions());
-        (await verificationContext.Event.FindAsync(e.Id)).Should().BeNull();
+        (await verificationContext.Event.FindAsync([e.Id], TestContext.CancellationToken)).Should().BeNull();
     }
 
     [TestMethod]
@@ -250,7 +252,7 @@ public class EventRepositoryTests : RepositoryTest
         var e1 = new Event { Id = Guid.NewGuid(), Title = "Future", StartDateTime = now.AddDays(1), EndDateTime = now.AddDays(2), Description = "D", CreatorId = TestUser.Id };
         var e2 = new Event { Id = Guid.NewGuid(), Title = "Past", StartDateTime = now.AddDays(-2), EndDateTime = now.AddDays(-1), Description = "D", CreatorId = TestUser.Id };
         await _context.Event.AddRangeAsync(e1, e2);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         // Act & Assert
         (await _repository.GetCount(futureOnly: false)).Should().Be(2);
@@ -263,9 +265,9 @@ public class EventRepositoryTests : RepositoryTest
         // Arrange
         var e = new Event { Id = Guid.NewGuid(), Title = "Test", Description = "D", StartDateTime = DateTime.Now, EndDateTime = DateTime.Now.AddHours(1), CreatorId = TestUser.Id };
         var u = new ApplicationUser { Id = "user2", UserName = "u2", Email = "u2@e.com", Name = "N", Surname = "S" };
-        await _context.Event.AddAsync(e);
-        await _context.Users.AddAsync(u);
-        await _context.SaveChangesAsync();
+        await _context.Event.AddAsync(e, TestContext.CancellationToken);
+        await _context.Users.AddAsync(u, TestContext.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.CancellationToken);
 
         var response = new EventResponse { EventId = e.Id, UserId = u.Id, Status = EventResponseStatus.Accepted, CreatedOn = DateTime.Now };
 

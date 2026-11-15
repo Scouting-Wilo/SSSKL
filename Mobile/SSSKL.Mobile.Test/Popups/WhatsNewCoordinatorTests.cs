@@ -23,7 +23,7 @@ public class WhatsNewCoordinatorTests
     public async Task CheckAsync_NewVersion_ShowsAndStoresVersion()
     {
         // Arrange
-        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey).Returns(new GlobalSetting("WhatsNewContent", "<p>Nieuw</p>", "2026-11-01T10:00:00Z"));
+        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey, Arg.Any<CancellationToken>()).Returns(new GlobalSetting("WhatsNewContent", "<p>Nieuw</p>", "2026-11-01T10:00:00Z"));
 
         // Act
         await CreateSut().CheckAsync();
@@ -38,7 +38,7 @@ public class WhatsNewCoordinatorTests
     {
         // Arrange
         _settings.Set(WhatsNewCoordinator.SeenVersionKey, "v1");
-        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey).Returns(new GlobalSetting("WhatsNewContent", "<p>Nieuw</p>", "v1"));
+        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey, Arg.Any<CancellationToken>()).Returns(new GlobalSetting("WhatsNewContent", "<p>Nieuw</p>", "v1"));
 
         // Act
         await CreateSut().CheckAsync();
@@ -51,7 +51,7 @@ public class WhatsNewCoordinatorTests
     public async Task CheckAsync_EmptyOrMissingSetting_DoesNotShow()
     {
         // Arrange
-        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey).Returns(new GlobalSetting("WhatsNewContent", "  ", "v2"), (GlobalSetting?)null);
+        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey, Arg.Any<CancellationToken>()).Returns(new GlobalSetting("WhatsNewContent", "  ", "v2"), (GlobalSetting?)null);
         var sut = CreateSut();
 
         // Act
@@ -67,7 +67,7 @@ public class WhatsNewCoordinatorTests
     public async Task CheckAsync_ApiFails_DoesNotThrow()
     {
         // Arrange
-        _api.GetGlobalSettingAsync(default!).ThrowsAsyncForAnyArgs(new HttpRequestException("offline"));
+        _api.GetGlobalSettingAsync(default!, default).ThrowsAsyncForAnyArgs(new HttpRequestException("offline"));
 
         // Act
         var act = () => CreateSut().CheckAsync();
@@ -80,7 +80,7 @@ public class WhatsNewCoordinatorTests
     public async Task CheckAsync_MalformedResponse_DoesNotThrowAndCanRunAgain()
     {
         // Arrange
-        _api.GetGlobalSettingAsync(default!).ThrowsAsyncForAnyArgs(new System.Text.Json.JsonException("bad json"));
+        _api.GetGlobalSettingAsync(default!, default).ThrowsAsyncForAnyArgs(new System.Text.Json.JsonException("bad json"));
         var sut = CreateSut();
 
         // Act
@@ -89,6 +89,6 @@ public class WhatsNewCoordinatorTests
         // Assert
         await act.Should().NotThrowAsync();
         await sut.CheckAsync();
-        await _api.ReceivedWithAnyArgs(2).GetGlobalSettingAsync(default!);
+        await _api.ReceivedWithAnyArgs(2).GetGlobalSettingAsync(default!, default);
     }
 }

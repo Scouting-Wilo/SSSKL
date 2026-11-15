@@ -4,7 +4,7 @@ namespace SSSKL.Mobile.Services;
 
 public sealed partial class WebDataCleaner
 {
-    private partial Task ClearPlatformAsync()
+    private static partial Task ClearPlatformAsync()
     {
         WebStorage.Instance?.DeleteAllData();
         CookieManager.Instance?.RemoveAllCookies(null);

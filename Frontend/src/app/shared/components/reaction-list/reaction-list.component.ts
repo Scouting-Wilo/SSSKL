@@ -94,8 +94,8 @@ import { ReactionItemComponent } from './reaction-item.component';
         @for (reaction of reactions(); track reaction.id) {
           <app-reaction-item
             [reaction]="reaction"
-            (onReact)="toggleOnReaction(reaction, $event)"
-            (onReply)="loadReactions()"
+            (react)="toggleOnReaction(reaction, $event)"
+            (replied)="loadReactions()"
           />
         }
         @if (reactions().length === 0) {

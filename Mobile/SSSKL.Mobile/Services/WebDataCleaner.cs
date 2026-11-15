@@ -10,5 +10,5 @@ public sealed partial class WebDataCleaner : IWebDataCleaner
 {
     public Task ClearAsync() => MainThread.InvokeOnMainThreadAsync(ClearPlatformAsync);
 
-    private partial Task ClearPlatformAsync();
+    private static partial Task ClearPlatformAsync();
 }

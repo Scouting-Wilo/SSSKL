@@ -625,7 +625,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
             !trimmedDomain.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             trimmedDomain = trimmedDomain.StartsWith("localhost", StringComparison.OrdinalIgnoreCase)
-                ? $"http://{trimmedDomain}"
+                ? $"http://{trimmedDomain}" // NOSONAR: only for a localhost dev domain; every other domain gets https
                 : $"https://{trimmedDomain}";
         }
 

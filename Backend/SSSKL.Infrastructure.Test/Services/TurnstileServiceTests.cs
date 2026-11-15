@@ -16,6 +16,8 @@ namespace SSSKL.Infrastructure.Test.Services;
 [TestClass]
 public class TurnstileServiceTests : RepositoryTest
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestInitialize]
     public void TestInitialize() => InitializeDatabase();
 
@@ -66,7 +68,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("""{"success":true,"action":"login","hostname":"ssskl.scoutingwilo.nl"}""");
 
-        var result = await Create(handler).VerifyAsync("token-1", "login", "203.0.113.5");
+        var result = await Create(handler).VerifyAsync("token-1", "login", "203.0.113.5", TestContext.CancellationToken);
 
         result.Success.Should().BeTrue();
         var body = handler.RequestBodies.Single();
@@ -83,8 +85,8 @@ public class TurnstileServiceTests : RepositoryTest
         var handler = Responding("{}");
         var sut = Create(handler);
 
-        (await sut.GetClientConfigAsync()).Should().Be(new TurnstileClientConfig(false, null));
-        (await sut.VerifyAsync(null, "login", null)).Success.Should().BeTrue();
+        (await sut.GetClientConfigAsync(TestContext.CancellationToken)).Should().Be(new TurnstileClientConfig(false, null));
+        (await sut.VerifyAsync(null, "login", null, TestContext.CancellationToken)).Success.Should().BeTrue();
         handler.RequestBodies.Should().BeEmpty();
     }
 
@@ -93,7 +95,7 @@ public class TurnstileServiceTests : RepositoryTest
     {
         Configure();
 
-        var config = await Create(Responding("{}")).GetClientConfigAsync();
+        var config = await Create(Responding("{}")).GetClientConfigAsync(TestContext.CancellationToken);
 
         config.Should().Be(new TurnstileClientConfig(true, "site-key"));
     }
@@ -104,7 +106,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure(hostnames: "kiosk.example.org, other.example.org");
         var handler = Responding("""{"success":true,"action":"login","hostname":"kiosk.example.org"}""");
 
-        (await Create(handler).VerifyAsync("token", "login", null)).Success.Should().BeTrue();
+        (await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken)).Success.Should().BeTrue();
     }
 
     [TestMethod]
@@ -113,7 +115,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("""{"success":false,"error-codes":["invalid-input-secret"]}""");
 
-        (await Create(handler).VerifyAsync("token", "login", null)).Success.Should().BeTrue();
+        (await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken)).Success.Should().BeTrue();
     }
 
     [TestMethod]
@@ -124,7 +126,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("{}");
 
-        var result = await Create(handler).VerifyAsync(token, "login", null);
+        var result = await Create(handler).VerifyAsync(token, "login", null, TestContext.CancellationToken);
 
         result.Success.Should().BeFalse();
         handler.RequestBodies.Should().BeEmpty();
@@ -136,7 +138,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("""{"success":false,"error-codes":["timeout-or-duplicate"]}""");
 
-        var result = await Create(handler).VerifyAsync("used-token", "login", null);
+        var result = await Create(handler).VerifyAsync("used-token", "login", null, TestContext.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.FailureReason.Should().Be("timeout-or-duplicate");
@@ -148,7 +150,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("""{"success":true,"action":"register","hostname":"ssskl.scoutingwilo.nl"}""");
 
-        var result = await Create(handler).VerifyAsync("token", "login", null);
+        var result = await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken);
 
         result.FailureReason.Should().Be("action-mismatch");
     }
@@ -159,7 +161,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("""{"success":true,"action":"login","hostname":"localhost"}""");
 
-        var result = await Create(handler).VerifyAsync("token", "login", null);
+        var result = await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken);
 
         result.FailureReason.Should().Be("hostname-mismatch");
     }
@@ -170,7 +172,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = new StubHandler(_ => throw new HttpRequestException("connection refused"));
 
-        var result = await Create(handler).VerifyAsync("token", "login", null);
+        var result = await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.FailureReason.Should().Be("siteverify-unavailable");
@@ -182,7 +184,7 @@ public class TurnstileServiceTests : RepositoryTest
         Configure();
         var handler = Responding("oops", HttpStatusCode.BadGateway);
 
-        var result = await Create(handler).VerifyAsync("token", "login", null);
+        var result = await Create(handler).VerifyAsync("token", "login", null, TestContext.CancellationToken);
 
         result.FailureReason.Should().Be("siteverify-unavailable");
     }

@@ -18,7 +18,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
       <p-confirm-dialog />
       <!-- In the mobile app the native tab bar and "Meer" page replace the header and menu. -->
       @if (!embedded) {
-        <app-sidebar [isOpen]="isSidebarOpen()" (close)="isSidebarOpen.set(false)" />
+        <app-sidebar [isOpen]="isSidebarOpen()" (closed)="isSidebarOpen.set(false)" />
       }
       <div class="main-wrapper">
         @if (!embedded) {

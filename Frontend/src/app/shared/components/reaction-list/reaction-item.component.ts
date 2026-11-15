@@ -71,7 +71,7 @@ import { FormsModule } from '@angular/forms';
               [rounded]="true"
               [severity]="hasDone('👍') ? 'primary' : 'secondary'"
               styleClass="w-7 h-7"
-              (onClick)="onReact.emit('👍')"
+              (onClick)="react.emit('👍')"
               [pTooltip]="getUsersFor('👍')"
               tooltipPosition="top"
             />
@@ -87,7 +87,7 @@ import { FormsModule } from '@angular/forms';
               [rounded]="true"
               [severity]="hasDone('❤️') ? 'danger' : 'secondary'"
               styleClass="w-7 h-7"
-              (onClick)="onReact.emit('❤️')"
+              (onClick)="react.emit('❤️')"
               [pTooltip]="getUsersFor('❤️')"
               tooltipPosition="top"
             />
@@ -265,8 +265,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class ReactionItemComponent {
   @Input({ required: true }) reaction!: ReactionDto;
-  @Output() onReact = new EventEmitter<string>();
-  @Output() onReply = new EventEmitter<void>();
+  @Output() react = new EventEmitter<string>();
+  @Output() replied = new EventEmitter<void>();
 
   private readonly reactionService = inject(ReactionService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -294,7 +294,7 @@ export class ReactionItemComponent {
       .toggleReaction(target.id, 'Reaction', this.replyContent.trim())
       .subscribe(() => {
         this.activeReplyTarget.set(null);
-        this.onReply.emit(); // Notify parent to reload
+        this.replied.emit(); // Notify parent to reload
       });
   }
 
@@ -322,7 +322,7 @@ export class ReactionItemComponent {
             summary: 'Verwijderd',
             detail: 'Reactie succesvol verwijderd',
           });
-          this.onReply.emit(); // Trigger refresh
+          this.replied.emit(); // Trigger refresh
         });
       },
     });

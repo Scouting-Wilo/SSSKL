@@ -87,6 +87,6 @@ public class UserStatRepositoryTests : RepositoryTest
 
         await _sut.Update(stat);
 
-        (await _sut.GetByUserId(TestUser.Id)).TotalOrders.Should().Be(7);
+        (await _sut.GetByUserId(TestUser.Id))!.TotalOrders.Should().Be(7);
     }
 }

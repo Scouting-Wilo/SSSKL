@@ -324,7 +324,7 @@ public class TopUpRepositoryTests : RepositoryTest
     {
         // Arrange
         var mockFactory = Substitute.For<IDbContextFactory<ApplicationDbContext>>();
-        mockFactory.CreateDbContextAsync().Returns(Task.FromException<ApplicationDbContext>(new InvalidOperationException("Database connection error")));
+        mockFactory.CreateDbContextAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException<ApplicationDbContext>(new InvalidOperationException("Database connection error")));
         var repository = new TopUpRepository(mockFactory);
         
         // Act & Assert
@@ -337,7 +337,7 @@ public class TopUpRepositoryTests : RepositoryTest
     
     #region Helper Methods
     
-    private TopUp CreateTopUp(ApplicationUser user, decimal saldo, DateTime? createdOn = null)
+    private static TopUp CreateTopUp(ApplicationUser user, decimal saldo, DateTime? createdOn = null)
     {
         return new TopUp
         {

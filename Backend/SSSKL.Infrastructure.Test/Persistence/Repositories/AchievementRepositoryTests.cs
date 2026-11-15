@@ -976,7 +976,7 @@ public class AchievementRepositoryTests : RepositoryTest
             .ToListAsync();
     }
 
-    private Achievement NewAchievement(string name, Guid? id = null, DateTime? createdOn = null) => new()
+    private static Achievement NewAchievement(string name, Guid? id = null, DateTime? createdOn = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
         Name = name,
@@ -988,7 +988,7 @@ public class AchievementRepositoryTests : RepositoryTest
         CreatedOn = createdOn ?? DateTime.Now
     };
 
-    private AchievementEntry NewAchievementEntry(Achievement achievement, ApplicationUser user, DateTime? createdOn = null) => new()
+    private static AchievementEntry NewAchievementEntry(Achievement achievement, ApplicationUser user, DateTime? createdOn = null) => new()
     {
         Id = Guid.NewGuid(),
         Achievement = achievement,

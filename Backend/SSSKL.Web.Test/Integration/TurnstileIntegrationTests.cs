@@ -12,6 +12,8 @@ namespace SSSKL.Web.Test.Integration;
 [TestClass]
 public class TurnstileIntegrationTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private static SssklWebApplicationFactory CreateFactory(ITurnstileService turnstile) =>
         new SssklWebApplicationFactory().WithServices(services =>
         {
@@ -36,10 +38,10 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(turnstile);
         var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/identity/forgotPassword", new { email = "nobody@example.com" });
+        var response = await client.PostAsJsonAsync("/api/v1/identity/forgotPassword", new { email = "nobody@example.com" }, TestContext.CancellationToken);
 
         Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
-        StringAssert.Contains(await response.Content.ReadAsStringAsync(), "turnstile_failed");
+        Assert.Contains("turnstile_failed", await response.Content.ReadAsStringAsync(TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -54,7 +56,7 @@ public class TurnstileIntegrationTests
             Content = JsonContent.Create(new { email = "nobody@example.com" })
         };
         request.Headers.Add(TurnstileEndpointFilter.HeaderName, "good-token");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.CancellationToken);
 
         Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
         await turnstile.Received(1).VerifyAsync("good-token", "forgot-password", Arg.Any<string?>(), Arg.Any<CancellationToken>());
@@ -66,7 +68,7 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(EnabledTurnstile());
         var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/identity/login", new { userName = "x", password = "y" });
+        var response = await client.PostAsJsonAsync("/api/v1/identity/login", new { userName = "x", password = "y" }, TestContext.CancellationToken);
 
         Assert.AreEqual(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -78,7 +80,7 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(turnstile);
         var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/identity/refresh", new { refreshToken = "invalid" });
+        var response = await client.PostAsJsonAsync("/api/v1/identity/refresh", new { refreshToken = "invalid" }, TestContext.CancellationToken);
 
         Assert.AreNotEqual(HttpStatusCode.Forbidden, response.StatusCode);
         await turnstile.DidNotReceiveWithAnyArgs().VerifyAsync(default, default!, default, default);
@@ -92,7 +94,7 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(turnstile);
         var client = factory.CreateClient();
 
-        var config = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/v1/GlobalSettings/public/turnstile");
+        var config = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/v1/GlobalSettings/public/turnstile", TestContext.CancellationToken);
 
         Assert.AreEqual("True", config!["enabled"].ToString());
         Assert.AreEqual("site-key", config["siteKey"].ToString());
@@ -104,7 +106,7 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(EnabledTurnstile());
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/v1/GlobalSettings/TurnstileSecretKey");
+        var response = await client.GetAsync("/api/v1/GlobalSettings/TurnstileSecretKey", TestContext.CancellationToken);
 
         Assert.AreNotEqual(HttpStatusCode.OK, response.StatusCode);
     }

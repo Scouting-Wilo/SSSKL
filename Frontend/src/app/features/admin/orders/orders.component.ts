@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnDestroy } from '@angular/core';
 import { DatePipe, CurrencyPipe, DOCUMENT } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -85,7 +85,7 @@ const CSV_EXPORT_POLL_INTERVAL_MS = 3000;
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [ConfirmationService]
 })
-export default class OrdersComponent implements OnInit, OnDestroy {
+export default class OrdersComponent implements OnDestroy {
   private readonly orderService = inject(OrderService);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -103,11 +103,6 @@ export default class OrdersComponent implements OnInit, OnDestroy {
   skip = 0;
   take = 15;
 
-  ngOnInit(): void {
-    // Initial load will be handled by onLazyLoad on table initialization if needed, 
-    // but we can call it here too if not using lazy load correctly. 
-    // With [lazy]="true", onLazyLoad is called on init.
-  }
 
   ngOnDestroy(): void {
     this.csvExportPollSubscription?.unsubscribe();

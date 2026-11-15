@@ -35,3 +35,10 @@ COPY --from=build /repo/Frontend/dist/SSSKL/browser /srv
 # Where Caddy sends /api and /hubs: the API container (the service name in the compose files)
 ENV API_UPSTREAM=api:8080
 EXPOSE 8080
+
+# Run as an unprivileged user: Caddy listens on 8080, so it needs no root. It only writes to
+# /data and /config (its XDG dirs), which the user gets to own.
+RUN addgroup -S -g 10001 caddy \
+    && adduser -S -D -H -u 10001 -G caddy caddy \
+    && chown -R caddy:caddy /data /config
+USER caddy

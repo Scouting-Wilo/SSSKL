@@ -12,6 +12,8 @@ namespace SSSKL.Web.Test.Integration
     [TestClass]
     public class CookieFlagTests
     {
+        public TestContext TestContext { get; set; } = null!;
+
         private const string TestEmail = "integration-test@example.com";
         private const string TestPassword = "P@ssw0rd!";
 
@@ -48,7 +50,7 @@ namespace SSSKL.Web.Test.Integration
 
             var registerPayload = new { email = TestEmail, userName = TestEmail, password = TestPassword, name = "Integration", surname = "Flag" };
             var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
-            var regResponse = await client.PostAsync("/api/v1/identity/register", regContent);
+            var regResponse = await client.PostAsync("/api/v1/identity/register", regContent, TestContext.CancellationToken);
             regResponse.EnsureSuccessStatusCode();
 
             using (var scope = factory.Services.CreateScope())
@@ -63,7 +65,7 @@ namespace SSSKL.Web.Test.Integration
             var loginPayload = new { userName = TestEmail, password = TestPassword };
             var content = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync("/api/v1/identity/login?useCookies=true", content);
+            var response = await client.PostAsync("/api/v1/identity/login?useCookies=true", content, TestContext.CancellationToken);
 
             // Assert: status OK and Set-Cookie header contains HttpOnly and Secure
             response.EnsureSuccessStatusCode();
@@ -71,7 +73,7 @@ namespace SSSKL.Web.Test.Integration
             Assert.IsTrue(response.Headers.Contains("Set-Cookie"), "Response did not contain Set-Cookie headers.");
 
             var setCookie = response.Headers.GetValues("Set-Cookie").ToList();
-            Assert.IsTrue(setCookie.Any(), "No Set-Cookie values returned.");
+            Assert.IsNotEmpty(setCookie, "No Set-Cookie values returned.");
 
             // At least one cookie should have HttpOnly and Secure attributes
             var hasHttpOnly = setCookie.Any(c => c.Contains("HttpOnly", System.StringComparison.OrdinalIgnoreCase));

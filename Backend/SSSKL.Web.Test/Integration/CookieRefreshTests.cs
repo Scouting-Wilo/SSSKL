@@ -12,6 +12,8 @@ namespace SSSKL.Web.Test.Integration
     [TestClass]
     public class CookieRefreshTests
     {
+        public TestContext TestContext { get; set; } = null!;
+
         private const string TestEmail = "integration-refresh@example.com";
         private const string TestPassword = "P@ssw0rd!";
 
@@ -47,8 +49,8 @@ namespace SSSKL.Web.Test.Integration
             // Register user
             var registerPayload = new { email = TestEmail, userName = TestEmail, password = TestPassword, name = "Integration", surname = "Refresh" };
             var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
-            var regResponse = await client.PostAsync("/api/v1/identity/register", regContent);
-            var regBody = await regResponse.Content.ReadAsStringAsync();
+            var regResponse = await client.PostAsync("/api/v1/identity/register", regContent, TestContext.CancellationToken);
+            var regBody = await regResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Register response status: " + (int)regResponse.StatusCode + " body: " + regBody);
             if (!regResponse.IsSuccessStatusCode)
             {
@@ -66,8 +68,8 @@ namespace SSSKL.Web.Test.Integration
             // Login using cookies
             var loginPayload = new { userName = TestEmail, password = TestPassword };
             var loginContent = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
-            var loginResponse = await client.PostAsync("/api/v1/identity/login?useCookies=true", loginContent);
-            var loginBody = await loginResponse.Content.ReadAsStringAsync();
+            var loginResponse = await client.PostAsync("/api/v1/identity/login?useCookies=true", loginContent, TestContext.CancellationToken);
+            var loginBody = await loginResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Login response status: " + (int)loginResponse.StatusCode + " body: " + loginBody);
             if (!loginResponse.IsSuccessStatusCode)
             {
@@ -76,7 +78,7 @@ namespace SSSKL.Web.Test.Integration
 
             Assert.IsTrue(loginResponse.Headers.Contains("Set-Cookie"), "Login response did not contain Set-Cookie headers.");
             var setCookie = loginResponse.Headers.GetValues("Set-Cookie").ToList();
-            Assert.IsTrue(setCookie.Any(), "No Set-Cookie values returned from login.");
+            Assert.IsNotEmpty(setCookie, "No Set-Cookie values returned from login.");
 
             var hasHttpOnly = setCookie.Any(c => c.Contains("HttpOnly", System.StringComparison.OrdinalIgnoreCase));
             var hasSecure = setCookie.Any(c => c.Contains("Secure", System.StringComparison.OrdinalIgnoreCase));
@@ -89,15 +91,15 @@ namespace SSSKL.Web.Test.Integration
 
             // Call refresh endpoint using the same client so cookies are sent automatically
             var refreshContent = new StringContent("{}", Encoding.UTF8, "application/json");
-            var refreshResponse = await client.PostAsync("/api/v1/identity/refresh?useCookies=true", refreshContent);
-            var refreshBody = await refreshResponse.Content.ReadAsStringAsync();
+            var refreshResponse = await client.PostAsync("/api/v1/identity/refresh?useCookies=true", refreshContent, TestContext.CancellationToken);
+            var refreshBody = await refreshResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Refresh response status: " + (int)refreshResponse.StatusCode + " body: " + refreshBody);
             if (!refreshResponse.IsSuccessStatusCode)
             {
                 Assert.Fail($"Refresh failed: {(int)refreshResponse.StatusCode} {refreshResponse.ReasonPhrase}. Body: {refreshBody}");
             }
 
-            var json = await refreshResponse.Content.ReadAsStringAsync();
+            var json = await refreshResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Assert.IsFalse(string.IsNullOrWhiteSpace(json), "Refresh response body was empty.");
 
             using var doc = JsonDocument.Parse(json);
@@ -109,7 +111,7 @@ namespace SSSKL.Web.Test.Integration
             if (refreshResponse.Headers.Contains("Set-Cookie"))
             {
                 var refreshSet = refreshResponse.Headers.GetValues("Set-Cookie").ToList();
-                Assert.IsTrue(refreshSet.Any(), "Refresh returned empty Set-Cookie headers.");
+                Assert.IsNotEmpty(refreshSet, "Refresh returned empty Set-Cookie headers.");
             }
         }
     }

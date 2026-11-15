@@ -84,7 +84,6 @@ public sealed partial class CommentsViewModel(
 
     public bool IsReplying => ReplyTarget is not null;
     public string ReplyText => ReplyTarget is null ? "" : Texts.ReplyTo(ReplyTarget.UserName);
-    public string Placeholder => Texts.CommentPlaceholder;
 
     public void Initialize(Guid targetId, string targetType)
     {
@@ -132,13 +131,13 @@ public sealed partial class CommentsViewModel(
     }
 
     [RelayCommand]
-    private Task QuickAsync(string emoji) => ToggleAsync(_targetId, _targetType, emoji);
+    private async Task QuickAsync(string emoji) => await ToggleAsync(_targetId, _targetType, emoji);
 
     [RelayCommand]
-    private Task LikeAsync(CommentEntry comment) => ToggleAsync(comment.Id, ReactionTarget.Reaction, Like);
+    private async Task LikeAsync(CommentEntry comment) => await ToggleAsync(comment.Id, ReactionTarget.Reaction, Like);
 
     [RelayCommand]
-    private Task HeartAsync(CommentEntry comment) => ToggleAsync(comment.Id, ReactionTarget.Reaction, Heart);
+    private async Task HeartAsync(CommentEntry comment) => await ToggleAsync(comment.Id, ReactionTarget.Reaction, Heart);
 
     [RelayCommand]
     private void StartReply(CommentEntry comment) => ReplyTarget = ReferenceEquals(ReplyTarget, comment) ? null : comment;

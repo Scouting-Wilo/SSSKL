@@ -68,9 +68,9 @@ import { FROM_APP_STATE } from '../../core/services/native-bridge.service';
                   [quote]="quote"
                   [canEdit]="canEdit(quote)"
                   [canDelete]="canDelete(quote)"
-                  (onEdit)="openQuoteForm($event)"
-                  (onDelete)="confirmDelete($event)"
-                  (onVote)="loadQuotes()"
+                  (edit)="openQuoteForm($event)"
+                  (remove)="confirmDelete($event)"
+                  (voted)="loadQuotes()"
                 ></app-quote-card>
               </div>
             }
