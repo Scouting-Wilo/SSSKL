@@ -11,7 +11,7 @@ build-android ──► android-internal (approve) ──► android-production 
 build-ios     ──► ios-testflight   (approve) ──► ios-app-store      (approve, stable tags only)
 ```
 
-1. **Build** (no approval): each app is tested (Core), built, signed and stored as a workflow artifact (`android-aab`, `ios-ipa`). Symbols go to Sentry (`ssskl-mobile`).
+1. **Build** (no approval): each app is tested (Core), built, signed and stored as a workflow artifact (`android-aab`, `ios-ipa`). Symbols go to Sentry (`ssskl-mobile`) and to the stores: the `.ipa` carries a `Symbols/` folder for App Store Connect (the build fails without it), and the Android job zips the unstripped Native AOT library (`native-debug-symbols.zip`, uploaded with the bundle as native debug symbols); the R8 mapping for Java frames is already inside the `.aab`.
 2. **Testing** (approve in the run): the `.aab` goes to the Play **internal testing** track; the `.ipa` goes to **TestFlight** for internal testers.
 3. **Production** (approve after testing): the same build is promoted from internal testing to **production** (Google reviews it), and attached to a new App Store version that is **submitted for App Review**. After Apple approves it, press *Release* in App Store Connect.
 
@@ -64,6 +64,17 @@ Settings → Environments. Restrict every environment to tags matching `v*` (*De
 | `android-production` | Ricardo | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` |
 
 Optional repository variable: `ANDROID_PRODUCTION_ROLLOUT`, for example `0.2` for a staged rollout to 20% of users. Without it, the release goes to everyone. `SENTRY_AUTH_TOKEN` is already a repository secret.
+
+## Store screenshots
+
+`Mobile/screenshots/screenshots.sh` generates the Android phone screenshots (1080×2160, the most Google Play allows is 2:1) into `Mobile/screenshots/output/<theme>/`:
+
+```bash
+brew install mobile-dev-inc/tap/maestro          # once
+Mobile/screenshots/screenshots.sh --theme both   # light|dark|both; --avd NAME, --skip-build, --output DIR
+```
+
+It starts the API in the E2E environment with `E2E:DemoData=true` (fictional members, products, orders, events, quotes and achievements from `Backend/SSSKL.Web/Registrations/DemoDataSeeder.cs`, in a throwaway SQLite database) on :5253, and the SPA (`start:mobile`) on :4300. It then boots the emulator (or uses the connected device), installs a Debug build and runs the Maestro flow `Mobile/screenshots/flow.yaml`. That flow signs in as `lotte` and visits the screens. Afterwards the script restores the device's screen size, status bar and dark mode. Port 4300 must be free. Logs are in `output/logs/`. Change the screens in `flow.yaml`; Google Play takes at most 8 phone screenshots.
 
 ## Maintenance
 
