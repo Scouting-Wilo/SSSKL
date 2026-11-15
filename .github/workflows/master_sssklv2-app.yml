@@ -78,7 +78,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # The Azure login federates on this environment (subject repo:Scouting-Wilo/SSSKL:environment:production),
+    # The Azure login federates on this environment (subject repo:Scouting-Wilo@354632108/SSSKL@724853881:environment:production),
     # since a tag run has a different ref for every release. See docs/docker.md, "Releases".
     environment: production
     permissions:

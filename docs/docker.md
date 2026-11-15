@@ -40,7 +40,7 @@ To redeploy a release to App Service, run "Build and deploy ASP.Net Core app to 
 ### One-time setup for tag deploys
 - **Azure login for App Service:** the deploy job runs in the GitHub environment `production`, because the subject of a tag run changes with every tag.
   1. In Azure, open the app registration or managed identity behind `AZUREAPPSERVICE_CLIENTID_…`.
-  2. Under *Federated credentials*, add a GitHub credential with entity type **Environment** and name `production`. The subject is `repo:Scouting-Wilo/SSSKL:environment:production`.
+  2. Under *Federated credentials*, add a GitHub credential with entity type **Environment** and name `production`. The repository uses immutable OIDC subjects (owner and repo IDs), so pick *Other issuer* and use the subject `repo:Scouting-Wilo@354632108/SSSKL@724853881:environment:production`. `gh api repos/Scouting-Wilo/SSSKL/actions/oidc/customization/sub` shows the prefix.
   3. Optionally, limit the `production` environment in GitHub (Settings → Environments) to tags matching `v*`.
 - **GHCR:** the first push creates the packages `ssskl-api` and `ssskl-frontend`. They are private by default. Make them public, or log in on the server with `docker login ghcr.io` and a personal access token with `read:packages`.
 
