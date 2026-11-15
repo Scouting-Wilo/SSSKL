@@ -8,7 +8,7 @@ using SSSKL.Domain.Events;
 
 namespace SSSKL.Application.EventHandlers;
 
-public class AchievementEventHandler(
+public partial class AchievementEventHandler(
     IAchievementRepository achievementRepository,
     IUserStatRepository userStatRepository,
     IProductUserStatRepository productUserStatRepository,
@@ -178,12 +178,12 @@ public class AchievementEventHandler(
 
             if (shouldAward)
             {
-                if (logger.IsEnabled(LogLevel.Information))
-                {
-                    logger.LogInformation("Awarding achievement {AchievementName} to user {UserId}", achievement.Name, userId);
-                }
+                LogAwarding(logger, achievement.Name, userId);
                 await achievementAwarder.AwardToUser(userId, achievement.Id);
             }
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Awarding achievement {AchievementName} to user {UserId}")]
+    private static partial void LogAwarding(ILogger logger, string achievementName, string userId);
 }

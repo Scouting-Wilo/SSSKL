@@ -10,7 +10,7 @@ namespace SSSKL.Web.Registrations;
 /// map to 4xx; anything else is logged and returned as a generic 500 that carries the trace id
 /// (never the exception message) so it can be found in Application Insights.
 /// </summary>
-public sealed class GlobalExceptionHandler(
+public sealed partial class GlobalExceptionHandler(
     IProblemDetailsService problemDetailsService,
     ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
@@ -21,10 +21,7 @@ public sealed class GlobalExceptionHandler(
     {
         if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
         {
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug("Request {Method} {Path} was aborted by the client", httpContext.Request.Method, httpContext.Request.Path);
-            }
+            LogRequestAborted(logger, httpContext.Request.Method, httpContext.Request.Path);
             httpContext.Response.StatusCode = StatusClientClosedRequest;
             return true;
         }
@@ -60,4 +57,7 @@ public sealed class GlobalExceptionHandler(
             Exception = exception
         });
     }
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Request {Method} {Path} was aborted by the client")]
+    private static partial void LogRequestAborted(ILogger logger, string method, PathString path);
 }

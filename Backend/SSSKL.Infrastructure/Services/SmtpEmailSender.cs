@@ -10,7 +10,7 @@ using SSSKL.Infrastructure.Persistence;
 
 namespace SSSKL.Infrastructure.Services;
 
-public class SmtpEmailSender : IEmailSender<ApplicationUser>
+public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
 {
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
     private readonly ILogger<SmtpEmailSender> _logger;
@@ -128,10 +128,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             using var client = new SmtpClient();
 
             // Log connection attempt details (excluding password)
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Attempting to connect to SMTP server: {Host}:{Port} as {User}", smtpServer, smtpPort, username);
-            }
+            LogConnecting(_logger, smtpServer, smtpPort, username);
 
             var security = smtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
@@ -140,10 +137,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             var result = await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Email sent successfully to {Email}. SMTP response: {SmtpResponse}", email, result.ResponseText);
-            }
+            LogEmailSent(_logger, email, result.ResponseText);
         }
         catch (System.Net.Sockets.SocketException socketEx)
         {
@@ -156,4 +150,10 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             throw;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Attempting to connect to SMTP server: {Host}:{Port} as {User}")]
+    private static partial void LogConnecting(ILogger logger, string? host, int port, string? user);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email sent successfully to {Email}. SMTP response: {SmtpResponse}")]
+    private static partial void LogEmailSent(ILogger logger, string email, string smtpResponse);
 }
