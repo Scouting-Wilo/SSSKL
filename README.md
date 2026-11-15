@@ -4,7 +4,7 @@
 | :--- | :--- | :--- |
 | **Backend** | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Backend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Backend) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Backend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Backend) |
 | **Frontend** | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Frontend&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Frontend) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Frontend&metric=coverage)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Frontend) |
-
+| **Mobile App (MAUI)** | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Mobile&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Mobile) | [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=scouting-wilo_SSSKL_Mobile&metric=coverage)](https://sonarcloud.io/summary/new_code?id=scouting-wilo_SSSKL_Mobile) |
 
 SSSKL is a modern, full-stack management and Point of Sale (POS) system designed for clubs and organizations. It provides a seamless interface for managing products, users, events, and financial transactions, with a focus on ease of use and visual excellence.
 
