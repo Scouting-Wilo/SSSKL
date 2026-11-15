@@ -52,7 +52,7 @@ jobs:
       build_number: ${{ steps.meta.outputs.build_number }}
       changelog: ${{ steps.meta.outputs.changelog }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -79,12 +79,12 @@ jobs:
     timeout-minutes: 60
     environment: mobile-signing
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -92,7 +92,7 @@ jobs:
         run: dotnet test Mobile/SSSKL.Mobile.Test
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: 17
           distribution: 'microsoft'
@@ -167,7 +167,7 @@ jobs:
           (cd "$sym" && zip -qr -9 "$RUNNER_TEMP/out/native-debug-symbols.zip" .)
           unzip -l "$RUNNER_TEMP/out/native-debug-symbols.zip"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-aab
           path: |
@@ -176,7 +176,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-apk
           path: ${{ runner.temp }}/out/SSSKL.apk
@@ -190,13 +190,13 @@ jobs:
     timeout-minutes: 90
     environment: mobile-signing
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Setup .NET
         # The xcode-27 image has no .NET 11 SDK.
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -258,7 +258,7 @@ jobs:
           fi
           cp "$ipa" "$RUNNER_TEMP/out/SSSKL.ipa"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-ipa
           path: ${{ runner.temp }}/out/SSSKL.ipa
@@ -272,11 +272,11 @@ jobs:
     timeout-minutes: 30
     environment: android-internal
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-aab
           path: ${{ runner.temp }}/aab
@@ -310,7 +310,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-apk
           path: ${{ runner.temp }}/apk
@@ -347,7 +347,7 @@ jobs:
     timeout-minutes: 30
     environment: android-production
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -376,11 +376,11 @@ jobs:
     timeout-minutes: 60
     environment: ios-testflight
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-ipa
           path: ${{ runner.temp }}/ipa
@@ -411,7 +411,7 @@ jobs:
     timeout-minutes: 30
     environment: ios-app-store
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

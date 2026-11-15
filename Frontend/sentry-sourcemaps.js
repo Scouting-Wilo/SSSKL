@@ -19,7 +19,7 @@ const serviceWorkerScripts = ['ngsw-worker.js', 'safety-worker.js', 'worker-basi
 function sentryCli(...args) {
   execFileSync(process.execPath, [cli, ...args], {
     stdio: 'inherit',
-    env: { ...process.env, SENTRY_ORG: 'ricardo-tillemans', SENTRY_PROJECT: 'ssskl-frontend' },
+    env: { ...process.env, SENTRY_ORG: 'scouting-wilo', SENTRY_PROJECT: 'ssskl-frontend' },
   });
 }
 

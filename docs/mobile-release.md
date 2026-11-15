@@ -71,8 +71,8 @@ Optional repository variable: `ANDROID_PRODUCTION_ROLLOUT`, for example `0.2` fo
 [Obtainium](https://github.com/ImranR98/Obtainium) installs and updates Android apps straight from their GitHub releases. Every release tag gets the signed universal `.apk` (arm64 and x86_64) built for Google Play, attached to the GitHub release `vX.Y.Z` as `SSSKL-X.Y.Z.apk`. If you haven't created the release by hand yet, the job creates it with generated notes. Pre-release tags get a GitHub pre-release, which Obtainium skips unless *Include prereleases* is on.
 
 Users add the app with this link (opens Obtainium, or its web page if Obtainium isn't installed):
-<https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/ricardotill/SSSKLv2>
-Or in Obtainium: *Add app* → `https://github.com/ricardotill/SSSKLv2`.
+<https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Scouting-Wilo/SSSKL>
+Or in Obtainium: *Add app* → `https://github.com/Scouting-Wilo/SSSKL`.
 
 **Signing:** the `.apk` is signed with the **upload key**, but Play App Signing re-signs Play installs with Google's app signing key. Android only updates an app with the same signature, so a user can't switch between Play and Obtainium without uninstalling (that wipes the app's login). The `android-github` job summary shows the certificate's SHA-256 fingerprint, for anyone who wants to verify the download (e.g. with AppVerifier).
 

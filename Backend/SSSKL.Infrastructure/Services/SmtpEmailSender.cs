@@ -115,7 +115,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
                 return;
             }
 
-            var senderName = settings.GetValueOrDefault(GlobalSettingsKeys.EmailSenderName, "SSSKLv2")?.Trim() ?? "SSSKLv2";
+            var senderName = settings.GetValueOrDefault(GlobalSettingsKeys.EmailSenderName, "SSSKL")?.Trim() ?? "SSSKL";
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(senderName, senderEmail));

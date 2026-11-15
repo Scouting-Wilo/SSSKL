@@ -41,7 +41,7 @@
   <!-- Sentry: in Release builds, upload debug symbols and sources (file/line + code in stack traces) to
        project ssskl-mobile. Only when SENTRY_AUTH_TOKEN is set (deploy CI secret), so local builds don't upload. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(SENTRY_AUTH_TOKEN)' != ''">
-    <SentryOrg>ricardo-tillemans</SentryOrg>
+    <SentryOrg>scouting-wilo</SentryOrg>
     <SentryProject>ssskl-mobile</SentryProject>
     <SentryUploadSymbols>true</SentryUploadSymbols>
     <SentryUploadSources>true</SentryUploadSources>

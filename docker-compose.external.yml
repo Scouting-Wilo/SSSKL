@@ -9,7 +9,7 @@
 services:
   api:
     # The image CI builds and pushes (see .github/workflows/dotnet.yml); APP_VERSION in .env pins a release.
-    image: ghcr.io/ricardotill/ssskl-api:${APP_VERSION:-latest}
+    image: ghcr.io/scouting-wilo/ssskl-api:${APP_VERSION:-latest}
     restart: unless-stopped
     # A SQL Server on this machine is reachable as host.docker.internal
     extra_hosts:
@@ -38,7 +38,7 @@ services:
 
   # The entrance: serves the web app and passes /api and /hubs on to the API
   frontend:
-    image: ghcr.io/ricardotill/ssskl-frontend:${APP_VERSION:-latest}
+    image: ghcr.io/scouting-wilo/ssskl-frontend:${APP_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       - api

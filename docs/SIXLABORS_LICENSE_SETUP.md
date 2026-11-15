@@ -11,7 +11,7 @@ For local development, you need to have a valid SixLabors license file in the re
 
 2. **Place the license file** at the repository root:
    ```
-   SSSKLv2/
+   SSSKL/
    ├── sixlabors.lic  ← License file goes here
    ├── Backend/
    ├── Frontend/

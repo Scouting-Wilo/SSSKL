@@ -4,8 +4,8 @@ SSSKL ships as two Docker images, which CI builds for `linux/amd64` and `linux/a
 
 | Image | Built from | Contents |
 | :--- | :--- | :--- |
-| `ghcr.io/ricardotill/ssskl-api` | `Backend/Dockerfile` | The API (`SSSKL.Web`), port 8080, as the non-root `app` user. |
-| `ghcr.io/ricardotill/ssskl-frontend` | `Frontend/Dockerfile` | The Angular build, served by Caddy on port 8080 (`Frontend/Caddyfile`). |
+| `ghcr.io/scouting-wilo/ssskl-api` | `Backend/Dockerfile` | The API (`SSSKL.Web`), port 8080, as the non-root `app` user. |
+| `ghcr.io/scouting-wilo/ssskl-frontend` | `Frontend/Dockerfile` | The Angular build, served by Caddy on port 8080 (`Frontend/Caddyfile`). |
 
 Caddy in the frontend image passes `/api/*` and `/hubs/*` (SignalR, including WebSockets) on to the `api` container. The browser only talks to the frontend container, so the SPA and the API share one origin and need no CORS.
 
@@ -40,7 +40,7 @@ To redeploy a release to App Service, run "Build and deploy ASP.Net Core app to 
 ### One-time setup for tag deploys
 - **Azure login for App Service:** the deploy job runs in the GitHub environment `production`, because the subject of a tag run changes with every tag.
   1. In Azure, open the app registration or managed identity behind `AZUREAPPSERVICE_CLIENTID_…`.
-  2. Under *Federated credentials*, add a GitHub credential with entity type **Environment** and name `production`. The subject is `repo:ricardotill/SSSKLv2:environment:production`.
+  2. Under *Federated credentials*, add a GitHub credential with entity type **Environment** and name `production`. The subject is `repo:Scouting-Wilo/SSSKL:environment:production`.
   3. Optionally, limit the `production` environment in GitHub (Settings → Environments) to tags matching `v*`.
 - **GHCR:** the first push creates the packages `ssskl-api` and `ssskl-frontend`. They are private by default. Make them public, or log in on the server with `docker login ghcr.io` and a personal access token with `read:packages`.
 
@@ -90,12 +90,12 @@ Run these from the repository root; it is the build context, because both images
 ```bash
 # API: the ImageSharp license is checked at build time and passed as a secret, never stored in a layer
 docker buildx build -f Backend/Dockerfile --secret id=sixlabors_lic,src=sixlabors.lic \
-  --build-arg VERSION=0.0.0-local -t ghcr.io/ricardotill/ssskl-api:local --load .
+  --build-arg VERSION=0.0.0-local -t ghcr.io/scouting-wilo/ssskl-api:local --load .
 
 # Frontend: both secrets are optional (without the PrimeUI key, PrimeUI shows its license banner)
 PRIMEUI_LICENSE_KEY=... docker buildx build -f Frontend/Dockerfile \
   --secret id=primeui_license_key,env=PRIMEUI_LICENSE_KEY \
-  --build-arg VERSION=0.0.0-local -t ghcr.io/ricardotill/ssskl-frontend:local --load .
+  --build-arg VERSION=0.0.0-local -t ghcr.io/scouting-wilo/ssskl-frontend:local --load .
 ```
 
 Then run them with `APP_VERSION=local` in `.env`.

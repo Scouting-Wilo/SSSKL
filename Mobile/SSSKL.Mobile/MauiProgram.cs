@@ -28,7 +28,7 @@ public static class MauiProgram
             // Also traces the API calls of IHttpClientFactory clients, continuing the trace into ssskl-api.
             .UseSentry(options =>
             {
-                options.Dsn = "https://338189840a26e46f7878b15df3abd3cc@o4512396434341888.ingest.de.sentry.io/4512396459507792";
+                options.Dsn = "https://4fcc8b9ff3fe7e11684254dcd7ef61a5@o4512437930426368.ingest.de.sentry.io/4512437954936912";
 #if DEBUG
                 options.Environment = "development";
                 options.TracesSampleRate = 1.0;

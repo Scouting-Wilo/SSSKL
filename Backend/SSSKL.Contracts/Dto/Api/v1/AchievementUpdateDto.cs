@@ -1,4 +1,3 @@
-// filepath: /Users/ricardotill/Development/Repositories/SSSKLv2/SSSKLv2/Dto/AchievementUpdateDto.cs
 using System.Text.Json.Serialization;
 using SSSKL.Domain.Entities;
 

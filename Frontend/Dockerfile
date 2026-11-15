@@ -5,7 +5,7 @@
 # Optional build secrets: --secret id=primeui_license_key,env=PRIMEUI_LICENSE_KEY (without it PrimeUI shows its
 # license banner) and --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN (uploads source maps to Sentry).
 # CI (.github/workflows/frontend-ci.yml) builds it for linux/amd64 and linux/arm64 and pushes it to
-# ghcr.io/ricardotill/ssskl-frontend. See docs/docker.md.
+# ghcr.io/scouting-wilo/ssskl-frontend. See docs/docker.md.
 
 # The build output is plain JS/CSS, the same for every architecture: build it once, on the machine's own platform
 FROM --platform=$BUILDPLATFORM node:26-slim AS build
@@ -27,7 +27,7 @@ RUN --mount=type=secret,id=primeui_license_key,env=PRIMEUI_LICENSE_KEY \
 FROM caddy:2.11 AS final
 ARG VERSION=0.0.0-local
 LABEL org.opencontainers.image.title="SSSKL web app" \
-      org.opencontainers.image.source="https://github.com/ricardotill/SSSKLv2" \
+      org.opencontainers.image.source="https://github.com/Scouting-Wilo/SSSKL" \
       org.opencontainers.image.version=$VERSION
 COPY Frontend/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /repo/Frontend/dist/SSSKL/browser /srv
