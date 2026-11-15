@@ -21,7 +21,10 @@ public sealed class GlobalExceptionHandler(
     {
         if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
         {
-            logger.LogDebug("Request {Method} {Path} was aborted by the client", httpContext.Request.Method, httpContext.Request.Path);
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("Request {Method} {Path} was aborted by the client", httpContext.Request.Method, httpContext.Request.Path);
+            }
             httpContext.Response.StatusCode = StatusClientClosedRequest;
             return true;
         }

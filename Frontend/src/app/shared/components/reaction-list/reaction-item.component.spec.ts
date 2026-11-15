@@ -114,7 +114,7 @@ describe('ReactionItemComponent', () => {
 
   it('toggles the reply box and submits a reply', () => {
     const replied = vi.fn();
-    component.onReply.subscribe(replied);
+    component.replied.subscribe(replied);
 
     component.toggleReply(reaction);
     fixture.detectChanges();
@@ -144,7 +144,7 @@ describe('ReactionItemComponent', () => {
 
   it('deletes a reaction after confirmation', () => {
     const replied = vi.fn();
-    component.onReply.subscribe(replied);
+    component.replied.subscribe(replied);
 
     component.confirmAndRemove(reaction.reactions![3]);
 

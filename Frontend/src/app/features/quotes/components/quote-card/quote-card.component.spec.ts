@@ -32,7 +32,7 @@ describe('QuoteCardComponent', () => {
 
   it('toggles a vote without opening the quote', () => {
     const voted = vi.fn();
-    component.onVote.subscribe(voted);
+    component.voted.subscribe(voted);
     const event = new MouseEvent('click');
     const stop = vi.spyOn(event, 'stopPropagation');
 

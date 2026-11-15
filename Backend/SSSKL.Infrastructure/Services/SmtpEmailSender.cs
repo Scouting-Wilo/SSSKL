@@ -39,7 +39,7 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
                 $"Gebruik de onderstaande code om je wachtwoord te herstellen. Deze code is beperkt geldig.<br/><br/><div style='font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #2563eb;'>{resetCode}</div>",
                 null, null));
 
-    private string GetHtmlTemplate(string title, string message, string? buttonUrl = null, string? buttonText = null)
+    private static string GetHtmlTemplate(string title, string message, string? buttonUrl = null, string? buttonText = null)
     {
         // Emerald palette — matches the frontend PrimeNG Aura preset
         // primary-500: #10b981  primary-600: #059669  primary-800: #065f46
@@ -128,7 +128,10 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             using var client = new SmtpClient();
 
             // Log connection attempt details (excluding password)
-            _logger.LogInformation("Attempting to connect to SMTP server: {Host}:{Port} as {User}", smtpServer, smtpPort, username);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Attempting to connect to SMTP server: {Host}:{Port} as {User}", smtpServer, smtpPort, username);
+            }
 
             var security = smtpPort == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
 
@@ -137,7 +140,10 @@ public class SmtpEmailSender : IEmailSender<ApplicationUser>
             var result = await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
-            _logger.LogInformation("Email sent successfully to {Email}. SMTP response: {SmtpResponse}", email, result.ResponseText);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Email sent successfully to {Email}. SMTP response: {SmtpResponse}", email, result.ResponseText);
+            }
         }
         catch (System.Net.Sockets.SocketException socketEx)
         {

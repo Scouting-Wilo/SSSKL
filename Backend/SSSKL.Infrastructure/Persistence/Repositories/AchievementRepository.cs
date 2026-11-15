@@ -224,7 +224,7 @@ public class AchievementRepository(IDbContextFactory<ApplicationDbContext> dbCon
         // Delete entries by their Ids to avoid issues with detached entities
         var ids = entries.Select(e => e.Id).ToList();
         var entriesInDb = await context.AchievementEntry.Where(e => ids.Contains(e.Id)).ToListAsync();
-        if (entriesInDb.Any())
+        if (entriesInDb.Count > 0)
         {
             context.AchievementEntry.RemoveRange(entriesInDb);
             await context.SaveChangesAsync();

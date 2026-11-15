@@ -97,7 +97,7 @@ describe('SidebarComponent', () => {
   it('opens the own profile and closes the sidebar', () => {
     create();
     const closed = vi.fn();
-    component.close.subscribe(closed);
+    component.closed.subscribe(closed);
 
     component.openOwnProfile();
     expect(drawerService.open).not.toHaveBeenCalled();

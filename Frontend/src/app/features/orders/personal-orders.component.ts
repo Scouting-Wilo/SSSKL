@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, viewChild } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, viewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { TableModule, TableLazyLoadEvent, Table } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -80,7 +80,7 @@ import { CardModule } from 'primeng/card';
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class PersonalOrdersComponent implements OnInit {
+export default class PersonalOrdersComponent {
   private orderService = inject(OrderService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -93,9 +93,6 @@ export default class PersonalOrdersComponent implements OnInit {
   totalRecords = signal<number>(0);
   loading = signal<boolean>(false);
   deletingOrderId = signal<string | null>(null);
-
-  ngOnInit() {
-  }
 
   loadOrders(event: TableLazyLoadEvent) {
     this.loading.set(true);

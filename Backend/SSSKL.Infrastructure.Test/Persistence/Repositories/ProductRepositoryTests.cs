@@ -218,7 +218,7 @@ public class ProductRepositoryTests : RepositoryTest
     }
 
     // Helpers
-    private Product NewProduct(string name, decimal price, int stock, Guid? id = null) => new()
+    private static Product NewProduct(string name, decimal price, int stock, Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
         Name = name,

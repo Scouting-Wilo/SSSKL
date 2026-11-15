@@ -25,7 +25,8 @@ public sealed class PopupPresenter(AppEndpoints endpoints) : IPopupPresenter
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                var navigation = Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation;
+                var windows = Application.Current?.Windows;
+                var navigation = windows is { Count: > 0 } ? windows[0].Page?.Navigation : null;
                 if (navigation is null)
                 {
                     return;

@@ -10,6 +10,8 @@ namespace SSSKL.Infrastructure.Test.Persistence.Repositories;
 [TestClass]
 public class OrderRepositoryTests : RepositoryTest
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private MockDbContextFactory _dbContextFactory = null!;
     private OrderRepository _sut = null!;
 
@@ -30,7 +32,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetAllAsync();
 
         // Assert
-        Assert.AreEqual(0, result.Count);
+        Assert.IsEmpty(result);
     }
 
     [TestMethod]
@@ -48,10 +50,10 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetAllAsync();
 
         // Assert
-        Assert.AreEqual(4, result.Count);
-        Assert.IsTrue(result.Any(o => o.Id == oldOrder.Id));
-        Assert.IsTrue(result[0].CreatedOn >= result[1].CreatedOn);
-        Assert.IsTrue(result[1].CreatedOn >= result[2].CreatedOn);
+        Assert.HasCount(4, result);
+        Assert.Contains(o => o.Id == oldOrder.Id, result);
+        Assert.IsGreaterThanOrEqualTo(result[1].CreatedOn, result[0].CreatedOn);
+        Assert.IsGreaterThanOrEqualTo(result[2].CreatedOn, result[1].CreatedOn);
         Assert.IsNotNull(result[0].User);
     }
     
@@ -72,7 +74,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetLatest();
 
         // Assert
-        Assert.AreEqual(0, result.Count());
+        Assert.IsEmpty(result);
     }
 
     [TestMethod]
@@ -91,7 +93,7 @@ public class OrderRepositoryTests : RepositoryTest
         var resultList = result.ToList();
 
         // Assert
-        Assert.AreEqual(2, resultList.Count);
+        Assert.HasCount(2, resultList);
         Assert.IsTrue(resultList.All(o => o.CreatedOn > now.AddHours(-12)));
         Assert.IsNotNull(resultList.First().User);
     }
@@ -111,7 +113,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetLatest();
 
         // Assert
-        Assert.AreEqual(10, result.Count());
+        Assert.HasCount(10, result);
     }
 
     #endregion
@@ -159,7 +161,7 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var savedOrders = await GetOrdersDirectly();
-        Assert.AreEqual(0, savedOrders.Count);
+        Assert.IsEmpty(savedOrders);
     }
 
     [TestMethod]
@@ -185,10 +187,10 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var savedOrders = await GetOrdersDirectly();
-        Assert.AreEqual(1, savedOrders.Count);
+        Assert.HasCount(1, savedOrders);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
         Assert.AreEqual(75m, updatedUser!.Saldo); // 100 - 25
     }
 
@@ -217,11 +219,11 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var savedOrders = await GetOrdersDirectly();
-        Assert.AreEqual(1, savedOrders.Count);
+        Assert.HasCount(1, savedOrders);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
-        var updatedProduct = await context.Product.FindAsync(TestProduct.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
+        var updatedProduct = await context.Product.FindAsync([TestProduct.Id], TestContext.CancellationToken);
         
         Assert.AreEqual(75m, updatedUser!.Saldo); // 100 - 25
         Assert.AreEqual(45, updatedProduct!.Stock); // 50 - 5
@@ -241,10 +243,10 @@ public class OrderRepositoryTests : RepositoryTest
         Product staleProduct1, staleProduct2;
         await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
-            staleUser1 = await context.Users.AsNoTracking().SingleAsync(u => u.Id == TestUser.Id);
-            staleUser2 = await context.Users.AsNoTracking().SingleAsync(u => u.Id == TestUser.Id);
-            staleProduct1 = await context.Product.AsNoTracking().SingleAsync(p => p.Id == TestProduct.Id);
-            staleProduct2 = await context.Product.AsNoTracking().SingleAsync(p => p.Id == TestProduct.Id);
+            staleUser1 = await context.Users.AsNoTracking().SingleAsync(u => u.Id == TestUser.Id, TestContext.CancellationToken);
+            staleUser2 = await context.Users.AsNoTracking().SingleAsync(u => u.Id == TestUser.Id, TestContext.CancellationToken);
+            staleProduct1 = await context.Product.AsNoTracking().SingleAsync(p => p.Id == TestProduct.Id, TestContext.CancellationToken);
+            staleProduct2 = await context.Product.AsNoTracking().SingleAsync(p => p.Id == TestProduct.Id, TestContext.CancellationToken);
         }
 
         // Act
@@ -253,11 +255,11 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         await using var assertContext = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await assertContext.Users.FindAsync(TestUser.Id);
-        var updatedProduct = await assertContext.Product.FindAsync(TestProduct.Id);
+        var updatedUser = await assertContext.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
+        var updatedProduct = await assertContext.Product.FindAsync([TestProduct.Id], TestContext.CancellationToken);
         Assert.AreEqual(65m, updatedUser!.Saldo); // 100 - 25 - 10
         Assert.AreEqual(43, updatedProduct!.Stock); // 50 - 5 - 2
-        Assert.AreEqual(2, (await GetOrdersDirectly()).Count);
+        Assert.HasCount(2, await GetOrdersDirectly());
     }
 
     [TestMethod]
@@ -275,7 +277,7 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
         Assert.AreEqual(88m, updatedUser!.Saldo);
         Assert.AreEqual(88m, TestUser.Saldo);
     }
@@ -310,10 +312,10 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var remainingOrders = await GetOrdersDirectly();
-        Assert.AreEqual(0, remainingOrders.Count);
+        Assert.IsEmpty(remainingOrders);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
         Assert.AreEqual(100m, updatedUser!.Saldo); // 75 + 25
     }
 
@@ -335,11 +337,11 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var remainingOrders = await GetOrdersDirectly();
-        Assert.AreEqual(0, remainingOrders.Count);
+        Assert.IsEmpty(remainingOrders);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
-        var updatedProduct = await context.Product.FindAsync(TestProduct.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
+        var updatedProduct = await context.Product.FindAsync([TestProduct.Id], TestContext.CancellationToken);
         
         Assert.AreEqual(100m, updatedUser!.Saldo); // 75 + 25
         Assert.AreEqual(50, updatedProduct!.Stock); // 45 + 5
@@ -363,11 +365,11 @@ public class OrderRepositoryTests : RepositoryTest
 
         // Assert
         var remainingOrders = await GetOrdersDirectly();
-        Assert.AreEqual(0, remainingOrders.Count);
+        Assert.IsEmpty(remainingOrders);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var updatedUser = await context.Users.FindAsync(TestUser.Id);
-        var updatedProduct = await context.Product.FindAsync(TestProduct.Id);
+        var updatedUser = await context.Users.FindAsync([TestUser.Id], TestContext.CancellationToken);
+        var updatedProduct = await context.Product.FindAsync([TestProduct.Id], TestContext.CancellationToken);
         
         Assert.AreEqual(100m, updatedUser!.Saldo); // 75 + 25 (reverted)
         Assert.AreEqual(45, updatedProduct!.Stock); // 45 (not reverted because name doesn't match)
@@ -419,7 +421,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetAll(skip: 1, take: 2);
 
         // Assert
-        Assert.AreEqual(2, result.Count);
+        Assert.HasCount(2, result);
     }
 
     [TestMethod]
@@ -432,7 +434,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetPersonal("testuser", skip: 1, take: 2);
 
         // Assert
-        Assert.AreEqual(2, result.Count);
+        Assert.HasCount(2, result);
     }
 
     [TestMethod]
@@ -445,7 +447,7 @@ public class OrderRepositoryTests : RepositoryTest
         var result = await _sut.GetPersonal("testuser");
 
         // Assert
-        Assert.AreEqual(2, result.Count);
+        Assert.HasCount(2, result);
     }
 
     #endregion
@@ -475,7 +477,7 @@ public class OrderRepositoryTests : RepositoryTest
     private async Task<IList<Order>> GetOrdersDirectly()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.Order.AsNoTracking().ToListAsync();
+        return await context.Order.AsNoTracking().ToListAsync(TestContext.CancellationToken);
     }
     
     private async Task SaveOrdersDirectly(params Order[] orders)
@@ -485,7 +487,7 @@ public class OrderRepositoryTests : RepositoryTest
         foreach (var order in orders)
         {
             // Ensure we use the existing tracked entities
-            var existingUser = await context.Users.FindAsync(order.User.Id);
+            var existingUser = await context.Users.FindAsync([order.User.Id], TestContext.CancellationToken);
             if (existingUser != null)
             {
                 order.User = existingUser;
@@ -493,7 +495,7 @@ public class OrderRepositoryTests : RepositoryTest
             
             if (order.Product != null)
             {
-                var existingProduct = await context.Product.FindAsync(order.Product.Id);
+                var existingProduct = await context.Product.FindAsync([order.Product.Id], TestContext.CancellationToken);
                 if (existingProduct != null)
                 {
                     order.Product = existingProduct;
@@ -502,28 +504,28 @@ public class OrderRepositoryTests : RepositoryTest
         }
         
         context.Order.AddRange(orders);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.CancellationToken);
     }
 
     private async Task SaveUserDirectly(ApplicationUser user)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Users.Add(user);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.CancellationToken);
     }
 
     private async Task UpdateUserDirectly(ApplicationUser user)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Users.Update(user);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.CancellationToken);
     }
 
     private async Task UpdateProductDirectly(Product product)
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         context.Product.Update(product);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.CancellationToken);
     }
     
     #endregion

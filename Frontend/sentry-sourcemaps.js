@@ -57,7 +57,8 @@ function rehashServiceWorkerManifest() {
     if (!fs.existsSync(file)) {
       continue;
     }
-    const hash = crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex');
+    // ngsw.json's hashTable is defined as SHA-1; this is a cache key, not a security check.
+    const hash = crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex'); // NOSONAR
     if (manifest.hashTable[url] !== hash) {
       manifest.hashTable[url] = hash;
       changed++;

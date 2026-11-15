@@ -128,8 +128,8 @@ public sealed partial class PosViewModel(
         try
         {
             // The saldo can have changed elsewhere, so refresh a cached user too (quietly: it's still usable).
-            Task userTask = currentUser.User is null ? currentUser.RefreshAsync() : RefreshUserQuietlyAsync();
-            var orderTask = api.GetOrderInitializeAsync();
+            Task userTask = currentUser.User is null ? currentUser.RefreshAsync(CancellationToken.None) : RefreshUserQuietlyAsync();
+            var orderTask = api.GetOrderInitializeAsync(CancellationToken.None);
             // Await both together: if one fails, the other's exception is still observed (no UnobservedTaskException).
             await Task.WhenAll(userTask, orderTask);
             var data = await orderTask;
@@ -234,7 +234,7 @@ public sealed partial class PosViewModel(
                 _allUsers.Where(u => u.IsSelected).Select(u => Guid.Parse(u.Id)).ToList(),
                 Amount,
                 Split && SelectedUserCount > 1);
-            await api.SubmitOrderAsync(order);
+            await api.SubmitOrderAsync(order, CancellationToken.None);
             haptics.Success();
             var forYourself = _allUsers.Any(u => u.IsSelf && u.IsSelected);
             var detail = Texts.OrderPlacedDetail(
@@ -271,9 +271,16 @@ public sealed partial class PosViewModel(
     [RelayCommand]
     private void DismissOrderPlaced()
     {
-        _orderPlacedTimer?.Cancel();
-        _orderPlacedTimer = null;
+        StopOrderPlacedTimer();
         ShowOrderPlaced = false;
+    }
+
+    private void StopOrderPlacedTimer()
+    {
+        // Cancel first: that ends the pending delay, so disposing the source is safe.
+        _orderPlacedTimer?.Cancel();
+        _orderPlacedTimer?.Dispose();
+        _orderPlacedTimer = null;
     }
 
     private void ShowOrderPlacedFor(string detail, string? saldo)
@@ -282,7 +289,7 @@ public sealed partial class PosViewModel(
         OrderPlacedSaldo = saldo is null ? null : Texts.NewSaldo(saldo);
         ShowOrderPlaced = true;
 
-        _orderPlacedTimer?.Cancel();
+        StopOrderPlacedTimer();
         var timer = _orderPlacedTimer = new CancellationTokenSource();
         _ = HideOrderPlacedLaterAsync(timer.Token);
     }
@@ -341,7 +348,7 @@ public sealed partial class PosViewModel(
     {
         try
         {
-            await currentUser.RefreshAsync();
+            await currentUser.RefreshAsync(CancellationToken.None);
         }
         catch (Exception ex) when (ex is ApiException or HttpRequestException or TaskCanceledException)
         {

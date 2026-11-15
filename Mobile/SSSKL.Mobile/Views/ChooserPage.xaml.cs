@@ -79,15 +79,18 @@ public partial class ChooserPage : ContentPage
 
     /// <summary>
     /// iOS: a finger near the left edge would start the swipe back. The back button still works. Android's
-    /// system back gesture can't be turned off for a part of the screen this simply.
+    /// system back gesture can't be turned off for a part of the screen this simply, so there the calls are
+    /// left out (a partial method without an implementation).
     /// </summary>
-    private void SetSwipeBack(bool enabled)
-    {
+    partial void SetSwipeBack(bool enabled);
+
 #if IOS
+    partial void SetSwipeBack(bool enabled)
+    {
         if (Handler is IPlatformViewHandler { ViewController.NavigationController.InteractivePopGestureRecognizer: { } recognizer })
         {
             recognizer.Enabled = enabled;
         }
-#endif
     }
+#endif
 }

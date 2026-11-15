@@ -78,7 +78,7 @@ public class BlobStorageAgentTests
         var fileStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var expectedUri = new Uri("https://test.blob.core.windows.net/test-container/test-file.jpg");
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
         _mockBlobClient.Uri.Returns(expectedUri);
 
         // Act
@@ -90,8 +90,8 @@ public class BlobStorageAgentTests
         result.ContentType.Should().Be(contentType);
         result.Uri.Should().Be(expectedUri.ToString());
 
-        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
-        await _mockBlobClient.Received(1).UploadAsync(fileStream, Arg.Is<BlobHttpHeaders>(h => h.ContentType == contentType));
+        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: Arg.Any<CancellationToken>());
+        await _mockBlobClient.Received(1).UploadAsync(fileStream, Arg.Is<BlobHttpHeaders>(h => h.ContentType == contentType), cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -109,7 +109,7 @@ public class BlobStorageAgentTests
         mockRawResponse.Status.Returns(201);
         mockResponse.GetRawResponse().Returns(mockRawResponse);
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns(mockResponse);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(mockResponse);
         _mockBlobClient.Uri.Returns(expectedUri);
 
         // Act
@@ -121,7 +121,7 @@ public class BlobStorageAgentTests
         result.ContentType.Should().Be(contentType);
         result.Uri.Should().Be(expectedUri.ToString());
 
-        await _mockContainerClient.Received(1).SetAccessPolicyAsync(PublicAccessType.None);
+        await _mockContainerClient.Received(1).SetAccessPolicyAsync(PublicAccessType.None, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -134,7 +134,7 @@ public class BlobStorageAgentTests
         var fileStream = new MemoryStream();
         var expectedUri = new Uri("https://test.blob.core.windows.net/test-container/empty-file.txt");
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
         _mockBlobClient.Uri.Returns(expectedUri);
 
         // Act
@@ -156,8 +156,8 @@ public class BlobStorageAgentTests
         var contentType = "image/jpeg";
         var fileStream = new MemoryStream(new byte[] { 1, 2, 3 });
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
-        _mockBlobClient.UploadAsync(Arg.Any<Stream>(), Arg.Any<BlobHttpHeaders>())
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
+        _mockBlobClient.UploadAsync(Arg.Any<Stream>(), Arg.Any<BlobHttpHeaders>(), cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Upload failed"));
 
         // Act & Assert
@@ -175,7 +175,7 @@ public class BlobStorageAgentTests
         var fileStream = new MemoryStream(new byte[] { 1, 2, 3 });
         var expectedUri = new Uri("https://test.blob.core.windows.net/test-container/test file with spaces & special chars.jpg");
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
         _mockBlobClient.Uri.Returns(expectedUri);
 
         // Act
@@ -199,14 +199,14 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "file-to-delete.jpg";
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
 
         // Act
         var result = await _sut.DeleteFileToBlobAsync(fileName);
 
         // Assert
         result.Should().BeTrue();
-        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -221,15 +221,15 @@ public class BlobStorageAgentTests
         mockRawResponse.Status.Returns(201);
         mockResponse.GetRawResponse().Returns(mockRawResponse);
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns(mockResponse);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(mockResponse);
 
         // Act
         var result = await _sut.DeleteFileToBlobAsync(fileName);
 
         // Assert
         result.Should().BeTrue();
-        await _mockContainerClient.Received(1).SetAccessPolicyAsync(PublicAccessType.None);
-        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+        await _mockContainerClient.Received(1).SetAccessPolicyAsync(PublicAccessType.None, cancellationToken: Arg.Any<CancellationToken>());
+        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -239,14 +239,14 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "non-existent-file.jpg";
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
 
         // Act
         var result = await _sut.DeleteFileToBlobAsync(fileName);
 
         // Assert
         result.Should().BeTrue();
-        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+        await _mockBlobClient.Received(1).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [TestMethod]
@@ -256,8 +256,8 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "file-to-delete.jpg";
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
-        _mockBlobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots)
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
+        _mockBlobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Delete failed"));
 
         // Act & Assert
@@ -272,7 +272,7 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "file with spaces & special chars.jpg";
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
 
         // Act
         var result = await _sut.DeleteFileToBlobAsync(fileName);
@@ -296,7 +296,7 @@ public class BlobStorageAgentTests
         var fileStream = new MemoryStream(new byte[] { 1, 2, 3 });
         await fileStream.DisposeAsync();
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
 
         // Act & Assert - Since the actual implementation may throw different exceptions when stream is disposed,
         // we should test that an exception is thrown rather than expecting a specific type
@@ -314,7 +314,7 @@ public class BlobStorageAgentTests
         var fileStream = new MemoryStream(new byte[] { 1 });
         var expectedUri = new Uri("https://test.blob.core.windows.net/test-container/");
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
         _mockBlobClient.Uri.Returns(expectedUri);
 
         // Act
@@ -333,7 +333,7 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "";
 
-        _mockContainerClient.CreateIfNotExistsAsync().Returns((Response<BlobContainerInfo>?)null);
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns((Response<BlobContainerInfo>?)null);
 
         // Act
         var result = await _sut.DeleteFileToBlobAsync(fileName);
@@ -352,7 +352,7 @@ public class BlobStorageAgentTests
         var contentType = "image/jpeg";
         var fileStream = new MemoryStream(new byte[] { 1, 2, 3 });
 
-        _mockContainerClient.CreateIfNotExistsAsync()
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Container creation failed"));
 
         // Act & Assert
@@ -367,7 +367,7 @@ public class BlobStorageAgentTests
         _sut = new BlobStorageAgent(_mockConfiguration, _mockBlobServiceClient, _mockLogger);
         var fileName = "file-to-delete.jpg";
 
-        _mockContainerClient.CreateIfNotExistsAsync()
+        _mockContainerClient.CreateIfNotExistsAsync(cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Container creation failed"));
 
         // Act & Assert

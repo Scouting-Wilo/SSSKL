@@ -26,7 +26,8 @@ try {
     // We try 'dotnet' first, then the common macOS path
     let dotnetCmd = 'dotnet';
     try {
-        execSync('which dotnet', { stdio: 'ignore' });
+        // Local dev script: finding dotnet on the developer's own PATH is the point.
+        execSync('which dotnet', { stdio: 'ignore' }); // NOSONAR
     } catch (e) {
         if (fs.existsSync('/usr/local/share/dotnet/dotnet')) {
             dotnetCmd = '/usr/local/share/dotnet/dotnet';

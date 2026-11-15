@@ -64,8 +64,8 @@ describe('QuoteCardComponent (rendered)', () => {
     create(false, true);
     const edit = vi.fn();
     const remove = vi.fn();
-    component.onEdit.subscribe(edit);
-    component.onDelete.subscribe(remove);
+    component.edit.subscribe(edit);
+    component.remove.subscribe(remove);
 
     el().querySelector<HTMLElement>('.group\\/author')!.click();
     expect(drawer.open).toHaveBeenCalledWith('u1');

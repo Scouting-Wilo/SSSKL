@@ -6,7 +6,7 @@ namespace SSSKL.Infrastructure.Persistence.Repositories;
 
 public class UserStatRepository(ApplicationDbContext context, IProductUserStatRepository productUserStatRepository) : IUserStatRepository
 {
-    public async Task<UserStat> GetByUserId(string userId)
+    public async Task<UserStat?> GetByUserId(string userId)
     {
         return await context.UserStats.FirstOrDefaultAsync(u => u.UserId == userId);
     }
@@ -105,7 +105,7 @@ public class UserStatRepository(ApplicationDbContext context, IProductUserStatRe
         return rowsUpdated > 0;
     }
 
-    private static int GetMinimumIntervalMinutes(IReadOnlyList<DateTime> dates)
+    private static int GetMinimumIntervalMinutes(List<DateTime> dates)
     {
         if (dates.Count < 2) return int.MaxValue;
 
@@ -119,7 +119,7 @@ public class UserStatRepository(ApplicationDbContext context, IProductUserStatRe
         return minimum;
     }
 
-    private static int GetMaximumRollingCount(IReadOnlyList<DateTime> dates, TimeSpan window)
+    private static int GetMaximumRollingCount(List<DateTime> dates, TimeSpan window)
     {
         var maximum = 0;
         var start = 0;
@@ -132,7 +132,7 @@ public class UserStatRepository(ApplicationDbContext context, IProductUserStatRe
         return maximum;
     }
 
-    private static int GetCurrentStreak(IReadOnlyList<DateTime> dates)
+    private static int GetCurrentStreak(List<DateTime> dates)
     {
         if (dates.Count == 0) return 0;
 

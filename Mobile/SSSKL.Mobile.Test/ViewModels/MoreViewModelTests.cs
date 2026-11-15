@@ -15,6 +15,8 @@ namespace SSSKL.Mobile.Test.ViewModels;
 [TestClass]
 public class MoreViewModelTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private readonly ISssklApi _api = Substitute.For<ISssklApi>();
     private readonly IAppNavigator _navigator = Substitute.For<IAppNavigator>();
     private readonly IUserDialogs _dialogs = Substitute.For<IUserDialogs>();
@@ -95,7 +97,7 @@ public class MoreViewModelTests
     public async Task LoadAsync_UserFailsWithCache_KeepsTheCachedUser()
     {
         // Arrange
-        await _currentUser.RefreshAsync();
+        await _currentUser.RefreshAsync(TestContext.CancellationToken);
         _api.GetMeAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("offline"));
         var sut = CreateSut();
 

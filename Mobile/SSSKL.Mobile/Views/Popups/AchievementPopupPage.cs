@@ -45,7 +45,7 @@ public sealed class AchievementPopupPage : PopupPage
         SemanticProperties.SetDescription(this, Texts.NewAchievementTitle);
     }
 
-    private static View CreateItemView()
+    private static VerticalStackLayout CreateItemView()
     {
         var image = new Image { HeightRequest = 140, WidthRequest = 140, Aspect = Aspect.AspectFit };
         image.SetBinding(Image.SourceProperty, static (AchievementItem a) => a.ImageUrl);

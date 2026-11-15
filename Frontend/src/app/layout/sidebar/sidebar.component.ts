@@ -34,7 +34,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
   ],
   template: `
     @if (isOpen()) {
-      <div class="mobile-overlay" (click)="close.emit()"></div>
+      <div class="mobile-overlay" (click)="closed.emit()"></div>
     }
 
     <aside class="sidebar" [class.sidebar-open]="isOpen()">
@@ -45,7 +45,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
         <p-menu
           [model]="items()"
           styleClass="w-full border-none bg-transparent"
-          (click)="close.emit()"
+          (click)="closed.emit()"
         />
       </div>
 
@@ -75,7 +75,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
 
           <a
             class="flex items-center gap-3 px-6 py-3 cursor-pointer text-red-500 hover:text-red-400 hover:bg-surface-700 transition-colors"
-            (click)="authService.logout(); close.emit()"
+            (click)="authService.logout(); closed.emit()"
             style="text-decoration: none;"
           >
             <div class="w-8 h-8 flex items-center justify-center">
@@ -89,7 +89,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
             [routerLink]="['/login']"
             [queryParams]="{ returnUrl: router.url }"
             style="text-decoration: none; color: var(--p-primary-color, #3b82f6);"
-            (click)="close.emit()"
+            (click)="closed.emit()"
           >
             <div class="w-8 h-8 flex items-center justify-center">
               <i class="pi pi-sign-in text-lg"></i>
@@ -101,7 +101,7 @@ import { EmbeddedService } from '../../core/services/embedded.service';
             class="flex items-center gap-3 px-6 py-3 cursor-pointer text-surface-200 hover:text-white hover:bg-surface-700 transition-colors"
             [routerLink]="['/register']"
             style="text-decoration: none;"
-            (click)="close.emit()"
+            (click)="closed.emit()"
           >
             <div class="w-8 h-8 flex items-center justify-center">
               <i class="pi pi-user-plus text-lg"></i>
@@ -217,7 +217,7 @@ export class SidebarComponent {
   public router = inject(Router);
   private readonly embedded = inject(EmbeddedService).isEmbedded;
   isOpen = input<boolean>(false);
-  close = output<void>();
+  closed = output<void>();
 
   canAccessQuotes = signal<boolean>(false);
 
@@ -259,7 +259,7 @@ export class SidebarComponent {
     const user = this.authService.currentUser();
     if (user) {
       this.drawerService.open(user.id);
-      this.close.emit();
+      this.closed.emit();
     }
   }
   items = computed<MenuItem[]>(() => {

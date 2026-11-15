@@ -16,6 +16,8 @@ namespace SSSKL.Mobile.Test.ViewModels;
 [TestClass]
 public class EventViewModelTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private static readonly DateTimeOffset Now = new(2026, 11, 11, 12, 0, 0, TimeSpan.Zero);
     private static readonly Guid EventId = Guid.NewGuid();
 
@@ -76,7 +78,7 @@ public class EventViewModelTests
         SignIn();
         _api.GetEventsAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new Page<EventItem> { Items = [Event()], TotalCount = 1 });
-        await _currentUser.RefreshAsync();
+        await _currentUser.RefreshAsync(TestContext.CancellationToken);
         var sut = new EventsViewModel(_api, _currentUser, _navigator, _dialogs, _endpoints, new FakeTimeProvider(Now), NullLogger<EventsViewModel>.Instance);
 
         // Act

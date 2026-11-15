@@ -37,7 +37,10 @@ public class BlobStorageAgent : IBlobStorageAgent
         await blob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
         await blob.UploadAsync(fileStream, new BlobHttpHeaders { ContentType = normalizedContentType });
         var urlString = blob.Uri.ToString();
-        _logger.LogInformation("File uploaded to Blob Storage: {FileName} ({ContentType})", strFileName, normalizedContentType);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("File uploaded to Blob Storage: {FileName} ({ContentType})", strFileName, normalizedContentType);
+        }
         return new BlobStorageItem() { FileName = strFileName, Uri = urlString, ContentType = normalizedContentType };
     }
 
@@ -49,7 +52,10 @@ public class BlobStorageAgent : IBlobStorageAgent
             await container.SetAccessPolicyAsync(PublicAccessType.None);
         var blob = container.GetBlobClient(strFileName);
         await blob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
-        _logger.LogInformation("File deleted from Blob Storage: {FileName}", strFileName);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("File deleted from Blob Storage: {FileName}", strFileName);
+        }
         return true;
     }
 

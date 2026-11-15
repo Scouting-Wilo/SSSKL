@@ -185,12 +185,12 @@ public class PosViewModelTests
         await _api.Received(1).SubmitOrderAsync(Arg.Is<OrderSubmit>(o =>
             o.Products.SequenceEqual(new[] { Cola.Id }) &&
             o.Users.SequenceEqual(new[] { Guid.Parse(MeId) }) &&
-            o.Amount == 2 && !o.Split));
+            o.Amount == 2 && !o.Split), Arg.Any<CancellationToken>());
         _haptics.Received(1).Success();
         sut.ShowOrderPlaced.Should().BeTrue();
         sut.OrderPlacedDetail.Should().Be("2× Cola · € 1,60");
         sut.OrderPlacedSaldo.Should().Be(Texts.NewSaldo("€ -2,50"));
-        await _api.Received(1).GetUnseenAchievementsAsync();
+        await _api.Received(1).GetUnseenAchievementsAsync(Arg.Any<CancellationToken>());
         sut.Products.Should().OnlyContain(p => !p.IsSelected);
         sut.Amount.Should().Be(1);
         sut.SelectedUserCount.Should().Be(1);
@@ -208,7 +208,7 @@ public class PosViewModelTests
 
         // Assert
         sut.CanSubmit.Should().BeFalse();
-        await _api.DidNotReceiveWithAnyArgs().SubmitOrderAsync(default!);
+        await _api.DidNotReceiveWithAnyArgs().SubmitOrderAsync(default!, default);
         await _dialogs.Received(1).AlertAsync(Texts.Error, Texts.GuestCannotOrder);
     }
 
@@ -218,7 +218,7 @@ public class PosViewModelTests
         // Arrange
         var sut = await CreateLoadedSutAsync();
         sut.ToggleProductCommand.Execute(sut.Products[0]);
-        _api.SubmitOrderAsync(default!).ReturnsForAnyArgs(Task.FromException(new ApiException(System.Net.HttpStatusCode.BadRequest, "Onvoldoende voorraad")));
+        _api.SubmitOrderAsync(default!, default).ReturnsForAnyArgs(Task.FromException(new ApiException(System.Net.HttpStatusCode.BadRequest, "Onvoldoende voorraad")));
 
         // Act
         await sut.SubmitCommand.ExecuteAsync(null);
@@ -266,8 +266,8 @@ public class PosViewModelTests
     public async Task LoadAsync_FirstLoadFails_ShowsTheErrorState()
     {
         // Arrange
-        _api.GetMeAsync().Returns(new CurrentUser { Id = MeId, FullName = "Ik Zelf", Roles = [RoleNames.User] });
-        _api.GetOrderInitializeAsync().ThrowsAsync(new HttpRequestException("offline"));
+        _api.GetMeAsync(Arg.Any<CancellationToken>()).Returns(new CurrentUser { Id = MeId, FullName = "Ik Zelf", Roles = [RoleNames.User] });
+        _api.GetOrderInitializeAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("offline"));
         var sut = new PosViewModel(_api, new CurrentUserService(_api),
             new AchievementPopupCoordinator(_api, _presenter, new FakeTimeProvider(), NullLogger<AchievementPopupCoordinator>.Instance),
             _dialogs, _haptics, new AppEndpoints(new Uri("https://api.test"), new Uri("https://web.test")), NullLogger<PosViewModel>.Instance);
@@ -287,7 +287,7 @@ public class PosViewModelTests
     {
         // Arrange
         var sut = await CreateLoadedSutAsync();
-        _api.GetOrderInitializeAsync().ThrowsAsync(new HttpRequestException("offline"));
+        _api.GetOrderInitializeAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("offline"));
 
         // Act
         await sut.LoadAsync();
@@ -313,8 +313,8 @@ public class PosViewModelTests
         TaskScheduler.UnobservedTaskException += OnUnobserved;
         try
         {
-            _api.GetMeAsync().ThrowsAsync(new HttpRequestException("me offline"));
-            _api.GetOrderInitializeAsync().ThrowsAsync(new HttpRequestException("order offline"));
+            _api.GetMeAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("me offline"));
+            _api.GetOrderInitializeAsync(Arg.Any<CancellationToken>()).ThrowsAsync(new HttpRequestException("order offline"));
             var sut = new PosViewModel(_api, new CurrentUserService(_api),
                 new AchievementPopupCoordinator(_api, _presenter, new FakeTimeProvider(), NullLogger<AchievementPopupCoordinator>.Instance),
                 _dialogs, _haptics, new AppEndpoints(new Uri("https://api.test"), new Uri("https://web.test")), NullLogger<PosViewModel>.Instance);

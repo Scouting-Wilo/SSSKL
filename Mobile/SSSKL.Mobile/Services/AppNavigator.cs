@@ -134,7 +134,7 @@ public sealed class AppNavigator(
         }
 
         var stack = shell.Navigation.NavigationStack;
-        if (stack.LastOrDefault() == page)
+        if (stack.Count > 0 && stack[^1] == page)
         {
             Forget(page.ShowAsync(path));
             return;
@@ -151,7 +151,7 @@ public sealed class AppNavigator(
 
     public Task OpenSettingsAsync() => GuardedAsync(async shell =>
     {
-        if (shell.Navigation.NavigationStack.LastOrDefault() is SettingsPage)
+        if (TopPage(shell) is SettingsPage)
         {
             return;
         }
@@ -198,11 +198,11 @@ public sealed class AppNavigator(
         var showing = false;
         await GuardedAsync(async shell =>
         {
-            if (shell.Navigation.NavigationStack.LastOrDefault() is WebPage)
+            if (TopPage(shell) is WebPage)
             {
                 await shell.Navigation.PopAsync();
             }
-            showing = shell.Navigation.NavigationStack.LastOrDefault() is INativePage page && page.Route == route;
+            showing = TopPage(shell) is INativePage page && page.Route == route;
         });
         if (!showing)
         {
@@ -322,5 +322,12 @@ public sealed class AppNavigator(
         {
             logger.LogError(ex, "Checking unseen achievements failed");
         }
+    }
+
+    /// <summary>The page on top of the shell's navigation stack, or null when it is empty.</summary>
+    private static Page? TopPage(Shell shell)
+    {
+        var stack = shell.Navigation.NavigationStack;
+        return stack.Count > 0 ? stack[^1] : null;
     }
 }

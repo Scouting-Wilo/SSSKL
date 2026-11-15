@@ -326,7 +326,7 @@ export class LanguageService {
     'remove_profile_picture': 'Profielfoto Verwijderen',
     'confirm_remove_profile_picture': 'Weet je zeker dat je de profielfoto van deze gebruiker wilt verwijderen?',
     'profile_picture_removed': 'Profielfoto succesvol verwijderd',
-    'password': 'Wachtwoord',
+    'password': 'Wachtwoord', // NOSONAR: a UI label, not a credential
     'send_notification': 'Notificatie Verzenden',
     'notification_title': 'Titel',
     'notification_message': 'Bericht',

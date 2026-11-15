@@ -9,6 +9,8 @@ namespace SSSKL.Mobile.Test.Api;
 [TestClass]
 public class SssklApiClientTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private static SssklApiClient CreateSut(StubHttpHandler handler) =>
         new(new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") });
 
@@ -21,7 +23,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(status));
 
         // Act
-        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent");
+        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent", TestContext.CancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -35,7 +37,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([]) });
 
         // Act
-        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent");
+        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent", TestContext.CancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -49,7 +51,7 @@ public class SssklApiClientTests
             StubHttpHandler.Json("""{"key":"WhatsNewContent","value":"<p>Nieuw</p>","updatedOn":"2026-11-01T10:00:00Z"}"""));
 
         // Act
-        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent");
+        var result = await CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent", TestContext.CancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -64,7 +66,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.InternalServerError));
 
         // Act
-        var act = () => CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent");
+        var act = () => CreateSut(handler).GetGlobalSettingAsync("WhatsNewContent", TestContext.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<ApiException>();
@@ -77,7 +79,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.NoContent));
 
         // Act
-        await CreateSut(handler).UpdateMeAsync(new SelfUpdate("Jan", null, "06"));
+        await CreateSut(handler).UpdateMeAsync(new SelfUpdate("Jan", null, "06"), TestContext.CancellationToken);
 
         // Assert
         var (request, body) = handler.Requests.Single();
@@ -93,7 +95,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.BadRequest));
 
         // Act
-        var act = () => CreateSut(handler).UpdateMeAsync(new SelfUpdate("Jan", null, null));
+        var act = () => CreateSut(handler).UpdateMeAsync(new SelfUpdate("Jan", null, null), TestContext.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<ApiException>();
@@ -106,7 +108,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Json("""{"sharedKey":"K","isTwoFactorEnabled":true}"""));
 
         // Act
-        var result = await CreateSut(handler).GetTwoFactorStatusAsync();
+        var result = await CreateSut(handler).GetTwoFactorStatusAsync(TestContext.CancellationToken);
 
         // Assert
         result.IsTwoFactorEnabled.Should().BeTrue();
@@ -123,7 +125,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Json("4"));
 
         // Act & Assert
-        (await CreateSut(handler).GetUnreadNotificationCountAsync()).Should().Be(4);
+        (await CreateSut(handler).GetUnreadNotificationCountAsync(TestContext.CancellationToken)).Should().Be(4);
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Notifications/unread-count");
     }
 
@@ -137,7 +139,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(status));
 
         // Act & Assert
-        (await CreateSut(handler).CanAccessQuotesAsync()).Should().Be(expected);
+        (await CreateSut(handler).CanAccessQuotesAsync(TestContext.CancellationToken)).Should().Be(expected);
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Quote?skip=0&take=1");
     }
 
@@ -150,7 +152,7 @@ public class SssklApiClientTests
             $$"""[{"id":"{{id}}","userId":"u1","title":"Nieuwe quote","message":"Jan heeft je getagd","isRead":false,"linkUri":"/quotes","createdOn":"2026-11-11T09:30:00"}]"""));
 
         // Act
-        var result = await CreateSut(handler).GetNotificationsAsync(20, 20);
+        var result = await CreateSut(handler).GetNotificationsAsync(20, 20, TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Notifications?unreadOnly=false&skip=20&take=20");
@@ -169,7 +171,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.OK));
 
         // Act
-        await CreateSut(handler).MarkNotificationReadAsync(id);
+        await CreateSut(handler).MarkNotificationReadAsync(id, TestContext.CancellationToken);
 
         // Assert
         var request = handler.Requests.Single().Request;
@@ -184,7 +186,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.InternalServerError));
 
         // Act
-        var act = () => CreateSut(handler).MarkAllNotificationsReadAsync();
+        var act = () => CreateSut(handler).MarkAllNotificationsReadAsync(TestContext.CancellationToken);
 
         // Assert
         await act.Should().ThrowAsync<ApiException>();
@@ -202,7 +204,7 @@ public class SssklApiClientTests
             $$"""{"items":[{"id":"{{id}}","createdOn":"2026-11-11T09:30:00","productName":"Bier","amount":2,"paid":3.0,"userFullName":"Jan"}],"totalCount":41}"""));
 
         // Act
-        var page = await CreateSut(handler).GetPersonalOrdersAsync(20, 20);
+        var page = await CreateSut(handler).GetPersonalOrdersAsync(20, 20, TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Order/personal?skip=20&take=20");
@@ -221,7 +223,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.NoContent));
 
         // Act
-        await CreateSut(handler).DeleteOrderAsync(id);
+        await CreateSut(handler).DeleteOrderAsync(id, TestContext.CancellationToken);
 
         // Assert
         var request = handler.Requests.Single().Request;
@@ -241,7 +243,7 @@ public class SssklApiClientTests
             """[{"position":1,"fullName":"Jan","productName":"Bier","amount":12,"userId":"u1"}]"""));
 
         // Act
-        var entries = await CreateSut(handler).GetLeaderboardAsync(product, period);
+        var entries = await CreateSut(handler).GetLeaderboardAsync(product, period, TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be($"https://api.test/api/v1/Leaderboard/{route}{product}");
@@ -255,7 +257,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.TooManyRequests));
 
         // Act
-        var act = () => CreateSut(handler).RecalculateStatsAsync("u1");
+        var act = () => CreateSut(handler).RecalculateStatsAsync("u1", TestContext.CancellationToken);
 
         // Assert
         (await act.Should().ThrowAsync<ApiException>()).Which.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
@@ -272,7 +274,7 @@ public class SssklApiClientTests
             """[{"id":"6f9619ff-8b86-d011-b42d-00cf4fc964ff","name":"Dorstig","description":"10 bier","dateAdded":null,"imageUrl":null,"completed":false,"tier":"Gold","parentAchievementId":null,"parentAchievementName":null}]"""));
 
         // Act
-        var listing = await CreateSut(handler).GetAchievementListingAsync("u 1");
+        var listing = await CreateSut(handler).GetAchievementListingAsync("u 1", TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri!.AbsoluteUri.Should().Be("https://api.test/api/v1/Achievement/all-for-user/u%201");
@@ -286,7 +288,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Json("""[{"id":"6f9619ff-8b86-d011-b42d-00cf4fc964ff","name":"Bier","price":1.5,"stock":3,"enableLeaderboard":true}]"""));
 
         // Act
-        var products = await CreateSut(handler).GetProductsAsync();
+        var products = await CreateSut(handler).GetProductsAsync(TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Product?all=true");
@@ -305,7 +307,7 @@ public class SssklApiClientTests
             """));
 
         // Act
-        var item = await CreateSut(handler).GetEventAsync(id);
+        var item = await CreateSut(handler).GetEventAsync(id, TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be($"https://api.test/api/v1/Events/{id}");
@@ -321,7 +323,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Json("""{"items":[],"totalCount":0}"""));
 
         // Act
-        await CreateSut(handler).GetEventsAsync(20, 20, futureOnly: true);
+        await CreateSut(handler).GetEventsAsync(20, 20, futureOnly: true, TestContext.CancellationToken);
 
         // Assert
         handler.Requests.Single().Request.RequestUri.Should().Be("https://api.test/api/v1/Events?skip=20&take=20&futureOnly=true");
@@ -335,7 +337,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.OK));
 
         // Act
-        await CreateSut(handler).RespondToEventAsync(id, EventResponse.Declined);
+        await CreateSut(handler).RespondToEventAsync(id, EventResponse.Declined, TestContext.CancellationToken);
 
         // Assert
         var (request, body) = handler.Requests.Single();
@@ -351,7 +353,7 @@ public class SssklApiClientTests
         var handler = new StubHttpHandler((_, _) => StubHttpHandler.Json("true"));
 
         // Act
-        var voted = await CreateSut(handler).ToggleQuoteVoteAsync(id);
+        var voted = await CreateSut(handler).ToggleQuoteVoteAsync(id, TestContext.CancellationToken);
 
         // Assert
         voted.Should().BeTrue();
@@ -369,9 +371,9 @@ public class SssklApiClientTests
         var sut = CreateSut(handler);
 
         // Act
-        var reactions = await sut.GetReactionsAsync(target, ReactionTarget.Event);
-        await sut.ToggleReactionAsync(new ToggleReaction(target, ReactionTarget.Quote, "👍"));
-        await sut.DeleteReactionAsync(target);
+        var reactions = await sut.GetReactionsAsync(target, ReactionTarget.Event, TestContext.CancellationToken);
+        await sut.ToggleReactionAsync(new ToggleReaction(target, ReactionTarget.Quote, "👍"), TestContext.CancellationToken);
+        await sut.DeleteReactionAsync(target, TestContext.CancellationToken);
 
         // Assert
         reactions.Should().ContainSingle().Which.Content.Should().Be("Hoi");
