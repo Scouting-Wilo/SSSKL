@@ -137,7 +137,7 @@ Release builds default to `https://ssskl.scoutingwilo.nl`.
   - compiled bindings with `x:DataType`
   - JSON only through the source-generated `ApiJsonContext` in Core; add new DTO types there
 - `SSSKL.Mobile.Core` has `IsAotCompatible` set, so the analyzers flag reflection use.
-- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml`: Core tests, a Release Android build, an unsigned iOS simulator build, and the SonarCloud analysis (`Scouting-Wilo_SSSKL_Mobile`, on the `xcode-27` runner because only macOS builds both platforms; coverage counts Core only, via `Mobile/coverage.runsettings`).
+- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml`: Core tests, a Release Android build, an unsigned iOS simulator build, and the SonarCloud analysis (`scouting-wilo_SSSKL_Mobile`, on the `xcode-27` runner because only macOS builds both platforms; coverage counts Core only, via `Mobile/coverage.runsettings`).
 
 **Store releases**
 - `.github/workflows/mobile-release.yml` runs on the same `vX.Y.Z` tag as the API. It builds and signs each app once, then moves that build through approval-gated environments: TestFlight → App Store and Play internal testing → production. Pre-release tags stop after testing.
