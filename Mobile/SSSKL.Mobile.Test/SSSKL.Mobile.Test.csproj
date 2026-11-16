@@ -19,6 +19,9 @@
     <PackageReference Include="NSubstitute" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SSSKL.Mobile.Domain\SSSKL.Mobile.Domain.csproj" />
     <ProjectReference Include="..\SSSKL.Mobile.Core\SSSKL.Mobile.Core.csproj" />
+    <ProjectReference Include="..\SSSKL.Mobile.Infrastructure\SSSKL.Mobile.Infrastructure.csproj" />
+    <ProjectReference Include="..\SSSKL.Mobile.Presentation\SSSKL.Mobile.Presentation.csproj" />
   </ItemGroup>
 </Project>

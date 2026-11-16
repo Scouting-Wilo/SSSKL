@@ -226,8 +226,10 @@ export class AuthService {
         );
     }
 
-    getPasskeyRequestOptions(userName: string): Observable<any> {
-        return this.http.get(`${this.API_URL}/PasskeyRequestOptions`, { params: { userName } });
+    /** Without a user name the options allow any of the user's passkeys for this site (discoverable credentials). */
+    getPasskeyRequestOptions(userName?: string): Observable<any> {
+        const params: Record<string, string> = userName ? { userName } : {};
+        return this.http.get(`${this.API_URL}/PasskeyRequestOptions`, { params });
     }
 
     loginWithPasskey(assertion: any): Observable<AccessTokenResponse> {

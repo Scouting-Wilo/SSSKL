@@ -1,4 +1,5 @@
-using SSSKL.Mobile.Core.Chooser;
+
+using SSSKL.Mobile.Domain.Chooser;
 
 namespace SSSKL.Mobile.Controls;
 

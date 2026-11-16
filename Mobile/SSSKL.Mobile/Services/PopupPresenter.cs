@@ -1,7 +1,7 @@
 using SSSKL.Mobile.Core.Configuration;
-using SSSKL.Mobile.Core.Models;
 using SSSKL.Mobile.Core.Services;
-using SSSKL.Mobile.Core.ViewModels;
+using SSSKL.Mobile.Domain.Models;
+using SSSKL.Mobile.Presentation.ViewModels;
 using SSSKL.Mobile.Views.Popups;
 
 namespace SSSKL.Mobile.Services;

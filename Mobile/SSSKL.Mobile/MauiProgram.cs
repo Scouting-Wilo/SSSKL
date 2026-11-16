@@ -2,13 +2,12 @@ using System.Reflection;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using SSSKL.Mobile.Controls;
-using SSSKL.Mobile.Core.Api;
 using SSSKL.Mobile.Core.Auth;
 using SSSKL.Mobile.Core.Configuration;
-using SSSKL.Mobile.Core.Popups;
 using SSSKL.Mobile.Core.Services;
-using SSSKL.Mobile.Core.ViewModels;
-using SSSKL.Mobile.Core.Web;
+using SSSKL.Mobile.Core;
+using SSSKL.Mobile.Infrastructure;
+using SSSKL.Mobile.Presentation;
 using SSSKL.Mobile.Services;
 using SSSKL.Mobile.Views;
 
@@ -67,25 +66,17 @@ public static class MauiProgram
 
         var endpoints = CreateEndpoints();
         var services = builder.Services;
-        services.AddSingleton(endpoints);
-        services.AddSingleton(TimeProvider.System);
 
-        // Auth: the refresher gets its own client without AuthTokenHandler (no recursion on 401).
+        // Onion layers: Core (application layer), Infrastructure (API adapters), Presentation (view models).
+        services.AddCore(endpoints);
+        services.AddInfrastructure(endpoints);
+        services.AddPresentation();
+
+        // Platform adapters for Core's ports.
         services.AddSingleton<ITokenStore, SecureTokenStore>();
-        services.AddHttpClient<ITokenRefresher, IdentityTokenRefresher>(c => c.BaseAddress = endpoints.ApiBaseUrl);
-        services.AddSingleton<AuthSession>();
-        services.AddTransient<AuthTokenHandler>();
-        services.AddHttpClient<ISssklApi, SssklApiClient>(c =>
-            {
-                c.BaseAddress = endpoints.ApiBaseUrl;
-                c.Timeout = TimeSpan.FromSeconds(30);
-            })
-            .AddHttpMessageHandler<AuthTokenHandler>();
-
-        services.AddSingleton<CurrentUserService>();
+        services.AddSingleton<IPasskeyAuthenticator, PasskeyAuthenticator>();
         services.AddSingleton<ISettingsStore, PreferencesSettingsStore>();
         services.AddSingleton<IThemeApplier, ThemeApplier>();
-        services.AddSingleton<ThemePreference>();
         services.AddSingleton<IPopupPresenter, PopupPresenter>();
         services.AddSingleton<IUserDialogs, UserDialogs>();
         services.AddSingleton<IHaptics, Haptics>();
@@ -95,31 +86,9 @@ public static class MauiProgram
         services.AddSingleton<IWebDataCleaner, WebDataCleaner>();
         services.AddSingleton<AppNavigator>();
         services.AddSingleton<IAppNavigator>(sp => sp.GetRequiredService<AppNavigator>());
-        services.AddSingleton<AchievementPopupCoordinator>();
-        services.AddSingleton<NotificationInbox>();
-        services.AddSingleton<WhatsNewCoordinator>();
-        services.AddSingleton<WebNavigationPolicy>();
         services.AddSingleton<WebSession>();
 
-        services.AddTransient<PosViewModel>();
-        services.AddTransient<ProfileViewModel>();
-        services.AddTransient<MoreViewModel>();
-        services.AddTransient<SettingsViewModel>();
-        services.AddTransient<NotificationsViewModel>();
-        services.AddTransient<OrdersViewModel>();
-        services.AddTransient<TopUpsViewModel>();
-        services.AddTransient<SaldoListViewModel>();
-        services.AddTransient<LeaderboardViewModel>();
-        services.AddTransient<StatsViewModel>();
-        services.AddTransient<AchievementsViewModel>();
-        services.AddTransient<AchievementDetailViewModel>();
-        services.AddTransient<UserProfileViewModel>();
-        services.AddTransient<CommentsViewModel>();
-        services.AddTransient<EventsViewModel>();
-        services.AddTransient<EventDetailViewModel>();
-        services.AddTransient<QuotesViewModel>();
-        services.AddTransient<QuoteDetailViewModel>();
-        services.AddTransient<ChooserViewModel>();
+        // Pages.
         services.AddTransient<PosPage>();
         services.AddTransient<ProfilePage>();
         services.AddTransient<MorePage>();

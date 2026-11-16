@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { AuthService } from './auth.service';
@@ -42,5 +42,27 @@ describe('AuthService', () => {
     expect(service.getRefreshToken()).toBeNull();
     expect(embeddedService.notifyNative).toHaveBeenCalledWith('logout');
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('asks for passkey options for any passkey when there is no user name', () => {
+    const { service } = setup(false);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getPasskeyRequestOptions().subscribe();
+
+    const req = http.expectOne(r => r.url === '/api/v1/identity/PasskeyRequestOptions');
+    expect(req.request.params.has('userName')).toBe(false);
+    req.flush({});
+  });
+
+  it('asks for passkey options of one user when given a user name', () => {
+    const { service } = setup(false);
+    const http = TestBed.inject(HttpTestingController);
+
+    service.getPasskeyRequestOptions('kim').subscribe();
+
+    const req = http.expectOne(r => r.url === '/api/v1/identity/PasskeyRequestOptions');
+    expect(req.request.params.get('userName')).toBe('kim');
+    req.flush({});
   });
 });

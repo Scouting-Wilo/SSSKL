@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using AndroidX.WebKit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Handlers;
-using SSSKL.Mobile.Core.Web;
+using SSSKL.Mobile.Presentation.Web;
 using SSSKL.Mobile.Services;
 
 namespace SSSKL.Mobile.Controls;

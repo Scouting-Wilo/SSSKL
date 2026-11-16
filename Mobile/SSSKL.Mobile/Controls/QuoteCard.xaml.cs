@@ -34,7 +34,7 @@ public partial class QuoteCard : ContentView
         base.OnBindingContextChanged();
         VoteButton.CommandParameter = BindingContext;
         OpenArea.CommandParameter = BindingContext;
-        if (BindingContext is Core.ViewModels.QuoteRow row)
+        if (BindingContext is Presentation.ViewModels.QuoteRow row)
         {
             SemanticProperties.SetDescription(OpenArea, row.AccessibleText);
         }
