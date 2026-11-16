@@ -15,8 +15,9 @@ public interface IPasskeyAuthenticator
     /// Asks the user for a passkey. <paramref name="requestOptionsJson"/> is the WebAuthn
     /// <c>PublicKeyCredentialRequestOptions</c> JSON from the API; returns the assertion as WebAuthn
     /// <c>PublicKeyCredential</c> JSON (base64url fields), the shape the SPA posts.
-    /// Throws <see cref="PasskeyCanceledException"/> when the user closed the sheet and
-    /// <see cref="PasskeyUnavailableException"/> when the device has no passkey for this site.
+    /// Throws <see cref="PasskeyCanceledException"/> when the user closed the sheet,
+    /// <see cref="PasskeyUnavailableException"/> when the device has no passkey for this site and
+    /// <see cref="PasskeyPlatformException"/> for any other failure of the platform's passkey API.
     /// </summary>
     Task<string> GetAssertionAsync(string requestOptionsJson, CancellationToken cancellationToken);
 }
@@ -28,6 +29,10 @@ public sealed class PasskeyCanceledException(string? message = null, Exception? 
 /// <summary>There is no passkey for this site on the device (or no passkey support at all).</summary>
 public sealed class PasskeyUnavailableException(string? message = null, Exception? inner = null)
     : Exception(message ?? "No passkey is available.", inner);
+
+/// <summary>The platform's passkey API failed for another reason (wraps the platform's own exception).</summary>
+public sealed class PasskeyPlatformException(string? message = null, Exception? inner = null)
+    : Exception(message ?? "The passkey request failed on the device.", inner);
 
 public enum PasskeySignInStatus
 {
@@ -112,7 +117,7 @@ public sealed class PasskeySignIn(IPasskeyApi api, IPasskeyAuthenticator authent
             logger.LogWarning(ex, "Passkey sign-in failed");
             return new PasskeySignInResult(PasskeySignInStatus.Failed);
         }
-        catch (Exception ex)
+        catch (PasskeyPlatformException ex)
         {
             // A platform failure of the passkey sheet: report it, but show the user a normal error.
             logger.LogError(ex, "Passkey sign-in failed on the device");

@@ -12,8 +12,19 @@ public sealed partial class PasskeyAuthenticator : IPasskeyAuthenticator
 {
     public bool IsSupported => IsSupportedPlatform();
 
-    public Task<string> GetAssertionAsync(string requestOptionsJson, CancellationToken cancellationToken) =>
-        MainThread.InvokeOnMainThreadAsync(() => GetAssertionPlatformAsync(requestOptionsJson, cancellationToken));
+    public async Task<string> GetAssertionAsync(string requestOptionsJson, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await MainThread.InvokeOnMainThreadAsync(() => GetAssertionPlatformAsync(requestOptionsJson, cancellationToken));
+        }
+        catch (Exception ex) when (ex is not (PasskeyCanceledException or PasskeyUnavailableException or OperationCanceledException))
+        {
+            // Everything else the platform throws (NSErrorException, Java exceptions, a missing window) is one
+            // contract failure for PasskeySignIn, which reports it and shows a normal error.
+            throw new PasskeyPlatformException($"The passkey sheet failed: {ex.Message}", ex);
+        }
+    }
 
     private static partial bool IsSupportedPlatform();
 

@@ -123,7 +123,7 @@ public class PasskeySignInTests
     [TestMethod]
     public async Task SignInAsync_PlatformFailure_Failed()
     {
-        var sut = Create(Api(), new FakeAuthenticator(_ => throw new InvalidOperationException("boom")));
+        var sut = Create(Api(), new FakeAuthenticator(_ => throw new PasskeyPlatformException("boom", new InvalidOperationException("boom"))));
 
         (await sut.SignInAsync(TestContext.CancellationToken)).Status.Should().Be(PasskeySignInStatus.Failed);
     }

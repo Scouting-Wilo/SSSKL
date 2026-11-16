@@ -93,10 +93,11 @@
     <MauiImage Include="Resources\Images\*" />
   </ItemGroup>
 
-  <!-- Associated domains (webcredentials:) for native passkey sign-in. Device builds only: entitlements make the
-       SDK sign, and the simulator builds (CI's unsigned one) have no certificate. Not named Entitlements.plist:
-       MAUI would pick that up for every build. -->
-  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' and !$(RuntimeIdentifier.StartsWith('iossimulator'))">
+  <!-- Associated domains (webcredentials:) for native passkey sign-in. Device builds only (an explicit device RID,
+       e.g. -r ios-arm64 or a deploy to a phone): entitlements make the SDK sign, and builds without a RID (the
+       Sonar scan's Debug build) or for the simulator (CI's unsigned one) have no certificate. Not named
+       Entitlements.plist: MAUI would pick that up for every build. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' and $(RuntimeIdentifier.StartsWith('ios-'))">
     <CodesignEntitlements>Platforms\iOS\Device.entitlements</CodesignEntitlements>
   </PropertyGroup>
 

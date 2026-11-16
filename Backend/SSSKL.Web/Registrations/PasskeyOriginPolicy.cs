@@ -12,17 +12,15 @@ public sealed class PasskeyOriginPolicy
 {
     private readonly HashSet<string> _allowedOrigins;
 
+    /// <summary>Allows <c>https://{websiteDomain}</c> plus <paramref name="extraOrigins"/>.</summary>
     /// <param name="websiteDomain">The site's domain; <c>https://{websiteDomain}</c> is always allowed.</param>
     /// <param name="extraOrigins">More origins (<c>Passkeys:AllowedOrigins</c>), e.g. the Android app's.</param>
     public PasskeyOriginPolicy(string websiteDomain, IEnumerable<string>? extraOrigins)
     {
         _allowedOrigins = new HashSet<string>(StringComparer.Ordinal) { $"https://{websiteDomain}" };
-        foreach (var origin in extraOrigins ?? [])
+        foreach (var origin in (extraOrigins ?? []).Where(origin => !string.IsNullOrWhiteSpace(origin)))
         {
-            if (!string.IsNullOrWhiteSpace(origin))
-            {
-                _allowedOrigins.Add(origin.Trim().TrimEnd('/'));
-            }
+            _allowedOrigins.Add(origin.Trim().TrimEnd('/'));
         }
     }
 

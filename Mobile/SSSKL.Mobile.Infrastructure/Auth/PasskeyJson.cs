@@ -37,13 +37,10 @@ public static class PasskeyJson
         var allowed = new List<byte[]>();
         if (root.TryGetProperty("allowCredentials", out var credentials) && credentials.ValueKind == JsonValueKind.Array)
         {
-            foreach (var credential in credentials.EnumerateArray())
-            {
-                if (credential.TryGetProperty("id", out var id) && id.GetString() is { Length: > 0 } value)
-                {
-                    allowed.Add(Base64Url.DecodeFromChars(value));
-                }
-            }
+            allowed.AddRange(credentials.EnumerateArray()
+                .Select(credential => credential.TryGetProperty("id", out var id) ? id.GetString() : null)
+                .Where(value => !string.IsNullOrEmpty(value))
+                .Select(value => Base64Url.DecodeFromChars(value)));
         }
 
         var userVerification = root.TryGetProperty("userVerification", out var uv) && uv.ValueKind == JsonValueKind.String
