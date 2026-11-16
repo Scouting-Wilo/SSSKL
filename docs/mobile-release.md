@@ -27,11 +27,13 @@ A pre-release tag (`v1.5.0-rc.1`) stops after step 2. If a release needs no new 
 ### Apple
 1. Enrol **Scouting Wilo** in the Apple Developer Program as an organisation (needs a D-U-N-S number; €99/year).
 2. Certificates, Identifiers & Profiles:
-   - Register the App ID `nl.scoutingwilo.ssskl` (no extra capabilities).
-   - Create an **App Store** provisioning profile for it. CI downloads it, so it never goes in a secret.
+   - Register the App ID `nl.scoutingwilo.ssskl` with the **Associated Domains** capability (passkey sign-in: the app's `webcredentials:ssskl.scoutingwilo.nl` entitlement, `Platforms/iOS/Device.entitlements`).
+   - Create an **App Store** provisioning profile for it (regenerate it after adding a capability). CI downloads it, so it never goes in a secret.
+   - Put the Team ID (Membership details) in `Frontend/public/.well-known/apple-app-site-association` (`<TeamID>.nl.scoutingwilo.ssskl`), so iOS lets the app use the site's passkeys.
    - Create an **Apple Distribution** certificate and export it from Keychain Access as a `.p12` with a password.
 3. App Store Connect → Users and Access → Integrations: create an **API key** with role *App Manager* and download the `.p8`. Note its Key ID and the Issuer ID.
 4. App Store Connect → Apps → **New app**: name SSSKL, bundle ID `nl.scoutingwilo.ssskl`, primary language Dutch.
+   Once the app is live, put its Apple ID (App Information) in `APP_STORE_ID` (`Frontend/src/app/core/config/app-stores.ts`, shows the App Store badge on the logged-out home page) and uncomment the `apple-itunes-app` meta tag in `Frontend/src/index.html` with the same ID (Safari's smart app banner).
 5. Fill in the App Store listing:
    - App Privacy: match `Mobile/SSSKL.Mobile/Platforms/iOS/PrivacyInfo.xcprivacy`.
    - Age rating, privacy policy URL and support URL.

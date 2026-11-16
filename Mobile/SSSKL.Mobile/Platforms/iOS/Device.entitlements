@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Passkeys for the site (native passkey sign-in, Services/PasskeyAuthenticator). The site's
+	     /.well-known/apple-app-site-association lists the app under webcredentials (Frontend/public/.well-known).
+	     The App ID needs the Associated Domains capability, or the App Store profile won't sign this. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>webcredentials:ssskl.scoutingwilo.nl</string>
+	</array>
+</dict>
+</plist>

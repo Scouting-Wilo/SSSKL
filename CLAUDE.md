@@ -73,6 +73,8 @@ MSTest + FluentAssertions + NSubstitute + Bogus, one test project per layer:
 - `layout/` (shell, header, sidebar) and `shared/` (components, directives, pipes, utils).
 - UI uses PrimeNG + Tailwind (`tailwindcss-primeui`). UI strings are Dutch, provided by `core/services/language.service.ts` (`translate(key)`); add new keys there.
 - PWA with service worker (`ngsw-config.json`) and web push notifications.
+- Passkey login (`features/auth/login.component.ts`, `services/webauthn.service.ts`) works without a user name (discoverable passkeys). The login page also keeps a conditional (`mediation: 'conditional'`) passkey request pending, so the browser offers passkeys in the user name field's autofill; only one passkey request can be pending, so it is aborted before the passkey button or a password login runs and restarted after they fail. Off in embedded mode.
+- The logged-out home page shows one store badge for the device (`shared/components/store-badge`: App Store on iOS/iPadOS, Google Play on Android, none on desktop or in the app); store IDs live in `core/config/app-stores.ts`. Safari's smart app banner is the `apple-itunes-app` meta tag in `src/index.html`.
 
 Follow `Frontend/AGENTS.md` for Angular code. Key rules: standalone components (don't set `standalone: true`), `ChangeDetectionStrategy.OnPush`, signals + `computed()` for state, `input()`/`output()` functions, `inject()` instead of constructor injection, native control flow (`@if`/`@for`), `class`/`style` bindings instead of `ngClass`/`ngStyle`, `host` object instead of `@HostBinding`/`@HostListener`, reactive forms, and WCAG AA / AXE compliance.
 
@@ -102,11 +104,12 @@ It is not in `SSSKL.slnx` (backend CI, its Sonar project and the App Service dep
 - Icons are Tabler Icons (MIT) SVGs in `SSSKL.Mobile/Resources/Images` (`ti_*.svg`, tab bar `tab_*.svg`), listed in `Core/Localization/Icons` and shown with `Controls/IconView` (tinted at runtime). Copy new ones from the `@tabler/icons` npm package's `icons/outline/` with `stroke` set to `#000000` and the full MIT notice in a comment at the top; a test checks every icon file for it.
 
 **Login**
-- Signed out (also after sign-out, session expiry and the SPA's `ssskl-app://logout`), the window root is the native `Views/WelcomePage` (logo, version, "Inloggen"). It sits on the splash's brand colour (`Brand`) in both colour modes; `Services/BrandSystemBars` gives the system bars light icons while it shows.
+- Signed out (also after sign-out, session expiry and the SPA's `ssskl-app://logout`), the window root is the native `Views/WelcomePage` (logo, version, "Inloggen met passkey", "Inloggen"). It sits on the splash's brand colour (`Brand`) in both colour modes; `Services/BrandSystemBars` gives the system bars light icons while it shows.
 - "Inloggen" opens `Views/LoginPage` as a modal sheet (page sheet on iOS, swipe-down closes it; close button and Android back close it too). A new `LoginPage` is resolved per tap.
 - The sheet uses the SPA's own `/login` page, so Turnstile, 2FA and passkeys keep working. When it has the tokens it dismisses itself and `AppNavigator.CompleteSignInAsync` switches the root to the `AppShell`.
 - After login the app reads `access_token`/`refresh_token` from the WebView's storage and keeps them in SecureStorage.
 - The app then injects them into every SPA page with a document-start script (`Web/WebSessionScript`). That script also sets `window.SSSKL_APP`.
+- "Inloggen met passkey" signs in natively through the API, without the WebView: Core's `Auth/PasskeySignIn` gets `GET identity/PasskeyRequestOptions` without a user name (any discoverable passkey), shows the system passkey sheet (`Services/PasskeyAuthenticator`: AuthenticationServices on iOS 16+, AndroidX Credential Manager on Android 9+) and posts the assertion to `identity/PasskeyAssertion` for bearer tokens. Both calls share a fresh cookie container (the API keeps the challenge in a cookie). The API accepts the app's WebAuthn origins via `PasskeyOriginPolicy` (`https://<WEBSITE_DOMAIN>` plus `Passkeys:AllowedOrigins`, the Android `android:apk-key-hash:` of each signing key in `assetlinks.json`). The site vouches for the app in `Frontend/public/.well-known/` (`assetlinks.json` with `get_login_creds`, `apple-app-site-association` with `webcredentials`); iOS device builds carry `webcredentials:ssskl.scoutingwilo.nl` (`Platforms/iOS/Device.entitlements`, not on simulator builds).
 
 **SPA embedded mode** (`core/services/embedded.service.ts`)
 - Detected by `window.SSSKL_APP` or the `SSSKLApp/` user-agent token.

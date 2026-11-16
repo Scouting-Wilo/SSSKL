@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
@@ -74,6 +75,16 @@ public static class MauiProgram
         services.AddSingleton<ITokenStore, SecureTokenStore>();
         services.AddHttpClient<ITokenRefresher, IdentityTokenRefresher>(c => c.BaseAddress = endpoints.ApiBaseUrl);
         services.AddSingleton<AuthSession>();
+        // Passkey sign-in: a new client per attempt, with its own cookies (the API keeps the challenge in one).
+        services.AddSingleton<IPasskeyAuthenticator, PasskeyAuthenticator>();
+        services.AddSingleton(sp => new PasskeySignIn(
+            () => new HttpClient(new HttpClientHandler { CookieContainer = new CookieContainer(), UseCookies = true })
+            {
+                BaseAddress = endpoints.ApiBaseUrl,
+                Timeout = TimeSpan.FromSeconds(30),
+            },
+            sp.GetRequiredService<IPasskeyAuthenticator>(),
+            sp.GetRequiredService<ILogger<PasskeySignIn>>()));
         services.AddTransient<AuthTokenHandler>();
         services.AddHttpClient<ISssklApi, SssklApiClient>(c =>
             {

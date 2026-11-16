@@ -238,6 +238,10 @@ public static class Texts
     public static string Stats => "Statistieken";
     public static string MyOrders => "Mijn bestellingen";
     public static string Login => "Inloggen";
+    public static string LoginWithPasskey => "Inloggen met passkey";
+    public static string PasskeyNotFound => "Er staat op dit apparaat geen passkey voor SSSKL. Log in met je wachtwoord en voeg er een toe via Instellingen.";
+    public static string PasskeyRejected => "Deze passkey wordt niet (meer) geaccepteerd. Log in met je wachtwoord.";
+    public static string PasskeyFailed => "Inloggen met passkey mislukt. Probeer het opnieuw.";
     public static string Logo => "SSSKL-logo";
     public static string MadeWithLoveBy => "Made with ❤️ by";
     public static string Author => "Ricardo Tillemans";

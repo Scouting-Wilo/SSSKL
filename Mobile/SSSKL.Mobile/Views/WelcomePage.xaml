@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!-- On the brand colour in both colour modes, continuing from the splash screen: the logo in the middle (where the
-     splash had it), the name and version below it and "Inloggen" at the bottom of the safe area. -->
+     splash had it), the name and version below it and "Inloggen met passkey" and "Inloggen" at the bottom of the
+     safe area. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:loc="clr-namespace:SSSKL.Mobile.Core.Localization;assembly=SSSKL.Mobile.Core"
@@ -47,14 +48,30 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- The SPA's dark-mode button: emerald-400 with dark text -->
-        <Button x:Name="LoginButton"
-                Grid.Row="1"
-                Text="{x:Static loc:Texts.Login}"
-                Style="{StaticResource PrimaryButton}"
-                BackgroundColor="{StaticResource Primary400}"
-                TextColor="{StaticResource Brand}"
-                MaximumWidthRequest="480"
-                Clicked="OnLoginClicked" />
+        <VerticalStackLayout Grid.Row="1" Spacing="12" MaximumWidthRequest="480">
+            <!-- Signs in natively with a passkey through the API (Services/PasskeyAuthenticator); hidden when the
+                 OS has no passkey support. Outlined, so the SPA login below stays the main action. -->
+            <Button x:Name="PasskeyButton"
+                    Text="{x:Static loc:Texts.LoginWithPasskey}"
+                    Style="{StaticResource PrimaryButton}"
+                    BackgroundColor="Transparent"
+                    BorderColor="{StaticResource Primary400}"
+                    BorderWidth="1.5"
+                    TextColor="{StaticResource Primary400}"
+                    Clicked="OnPasskeyClicked" />
+            <ActivityIndicator x:Name="PasskeyBusy"
+                               IsVisible="False"
+                               IsRunning="False"
+                               Color="{StaticResource Primary400}"
+                               HeightRequest="50" />
+
+            <!-- The SPA's dark-mode button: emerald-400 with dark text -->
+            <Button x:Name="LoginButton"
+                    Text="{x:Static loc:Texts.Login}"
+                    Style="{StaticResource PrimaryButton}"
+                    BackgroundColor="{StaticResource Primary400}"
+                    TextColor="{StaticResource Brand}"
+                    Clicked="OnLoginClicked" />
+        </VerticalStackLayout>
     </Grid>
 </ContentPage>
