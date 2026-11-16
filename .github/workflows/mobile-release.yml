@@ -1,7 +1,7 @@
 # Releases the MAUI app to the stores for a release tag vX.Y.Z on master (the same tag as the API and SPA).
 #
 #   build-android ──► android-internal (approve) ──► android-production (approve, stable tags only)
-#                                                └─► android-github (signed .apk on the GitHub release, for Obtainium)
+#                                                                    └─► android-github (signed .apk on the GitHub release, for Obtainium)
 #   build-ios     ──► ios-testflight   (approve) ──► ios-app-store      (approve, stable tags only)
 #
 # Each app is built and signed once; the store jobs only move that artifact, so production gets the exact build
@@ -300,11 +300,14 @@ jobs:
       - name: Summary
         run: echo "Build ${{ needs.meta.outputs.build_number }} is on the **internal testing** track in Google Play Console." >> "$GITHUB_STEP_SUMMARY"
 
-  # Obtainium (and anyone sideloading) installs from the GitHub release of the tag: attach the signed .apk once the
-  # build passed internal testing. Pre-release tags get a pre-release, which Obtainium skips unless asked to.
+  # Obtainium (and anyone sideloading) installs from the GitHub release of the tag: attach the signed .apk only after
+  # the Google Play production deployment was approved and succeeded, so sideloaded users never get a build that
+  # Play users don't. It needs android-production, so pre-release tags (which stop at internal testing) and a
+  # rejected or failed production deployment publish no .apk.
   android-github:
     name: GitHub release (Obtainium)
-    needs: [ version, meta, android-internal ]
+    needs: [ version, meta, android-production ]
+    if: needs.version.outputs.stable == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -321,12 +324,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
           VERSION: ${{ needs.version.outputs.version }}
-          STABLE: ${{ needs.version.outputs.stable }}
         run: |
           # The release is usually created by hand; create it (with generated notes) if it isn't there yet.
           if ! gh release view "$TAG" >/dev/null 2>&1; then
-            prerelease=$([ "$STABLE" = "true" ] || echo "--prerelease")
-            gh release create "$TAG" --verify-tag --generate-notes --title "$TAG" $prerelease
+            gh release create "$TAG" --verify-tag --generate-notes --title "$TAG"
           fi
           asset="$RUNNER_TEMP/apk/SSSKL-$VERSION.apk"
           mv "$RUNNER_TEMP/apk/SSSKL.apk" "$asset"

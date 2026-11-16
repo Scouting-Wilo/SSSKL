@@ -65,6 +65,7 @@ MSTest + FluentAssertions + NSubstitute + Bogus, one test project per layer:
 - **`SSSKL.Web.Test`**: controller tests that mock `ISender`, and integration tests (`Integration/`) that send real HTTP requests through `Integration/Infrastructure/SssklWebApplicationFactory` (IntegrationTest environment, one temp SQLite file per factory, fakes for email/web push/blob storage exposed as `Emails`/`Push`/`Blobs`; `WithSetting`/`WithServices` for overrides). Test classes derive from `IntegrationTestBase`, own one static factory (`[ClassInitialize]`/`[ClassCleanup]`) and use its helpers (`CreateAuthenticatedClientAsync(role)`, `SeedProductAsync`, `WithDbAsync`, `PollAsync`). Classes run in parallel (`MSTestSettings.cs`), so give each test its own users and data.
 - CI (`.github/workflows/dotnet.yml`) excludes Migrations, Controllers, `Program.cs` and `DependencyInjection.cs` from Sonar coverage.
 - CI only runs what a push or PR changes: each workflow (`dotnet.yml`, `frontend-ci.yml`, `mobile.yml`) first calls `changes.yml`, which outputs `backend`/`frontend`/`mobile` from path patterns, and its jobs skip otherwise (a skipped job still satisfies the required `Build & Test` check; trigger `paths:` filters would leave it pending). Backend changes also run the frontend's E2E suite. Release tags and manual runs build everything. Update the patterns in `changes.yml` when an area starts reading new files.
+- CodeQL (`.github/workflows/codeql.yml`, advanced setup, `security-and-quality` queries) scans C# (Backend and Mobile, `build-mode: none`, so no SixLabors license or MAUI workload), TypeScript and the workflows on every PR and master push and weekly. Keep CodeQL's default setup off in the repository settings.
 
 ## Frontend architecture (`Frontend/src/app/`)
 
@@ -157,7 +158,7 @@ Release builds default to `https://ssskl.scoutingwilo.nl`.
 
 **Store releases**
 - `.github/workflows/mobile-release.yml` runs on the same `vX.Y.Z` tag as the API. It builds and signs each app once, then moves that build through approval-gated environments: TestFlight → App Store and Play internal testing → production. Pre-release tags stop after testing.
-- After Play internal testing, `android-github` attaches the signed universal `.apk` to the tag's GitHub release (`SSSKL-X.Y.Z.apk`, a pre-release for pre-release tags) for Obtainium.
+- Only after the Play production deployment is approved and succeeds, `android-github` attaches the signed universal `.apk` to the tag's GitHub release (`SSSKL-X.Y.Z.apk`) for Obtainium. Pre-release tags and a rejected production deployment publish no `.apk`.
 - The uploads use fastlane (`Mobile/Gemfile`, `Mobile/fastlane/Fastfile`).
 - The display version is the tag's numbers (`ApplicationDisplayVersion` = `_SssklNumericVersion`). The build number is run number + 1000 (`-p:ApplicationVersion`).
 - iOS jobs run on the `xcode-27` runner image with Xcode 27.2; it has no .NET 11, so `setup-dotnet` installs it.
