@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Platform-independent part of the mobile app: API client, auth, popups and view models.
-       No MAUI dependency, so it is unit tested on plain net11.0 (SSSKL.Mobile.Test). -->
+  <!-- Use cases and ports of the mobile app: the interfaces that Infrastructure (API client) and the MAUI app (SecureStorage, passkey sheet, navigation, dialogs) implement, the auth session, passkey sign-in, popup coordinators and app services. No MAUI or HTTP client code. -->
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -10,7 +9,12 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SSSKL.Mobile.Domain\SSSKL.Mobile.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SSSKL.Mobile.Test" />

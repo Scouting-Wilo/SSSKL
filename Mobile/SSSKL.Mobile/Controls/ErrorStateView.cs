@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using SSSKL.Mobile.Core.Localization;
+using SSSKL.Mobile.Presentation.Localization;
 
 namespace SSSKL.Mobile.Controls;
 

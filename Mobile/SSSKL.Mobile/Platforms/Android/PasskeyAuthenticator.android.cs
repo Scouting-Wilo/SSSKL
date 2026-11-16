@@ -1,7 +1,7 @@
-using AndroidX.Core.Content;
-using AndroidX.Credentials;
 using Android.Runtime;
+using AndroidX.Core.Content;
 using AndroidX.Credentials.Exceptions;
+using AndroidX.Credentials;
 using SSSKL.Mobile.Core.Auth;
 
 namespace SSSKL.Mobile.Services;

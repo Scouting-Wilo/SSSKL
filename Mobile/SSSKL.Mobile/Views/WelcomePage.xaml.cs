@@ -1,6 +1,6 @@
 using SSSKL.Mobile.Core.Auth;
-using SSSKL.Mobile.Core.Localization;
 using SSSKL.Mobile.Core.Services;
+using SSSKL.Mobile.Presentation.Localization;
 using SSSKL.Mobile.Services;
 
 namespace SSSKL.Mobile.Views;

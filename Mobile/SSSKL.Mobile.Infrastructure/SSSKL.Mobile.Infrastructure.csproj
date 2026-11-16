@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Adapters to the SSSKL API: the HTTP client, bearer-token handler, token refresher, passkey endpoints and the source-generated JSON (ApiJsonContext). Implements Core's ports. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- The app ships with Native AOT: enables the trim/AOT/single-file analyzers here. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SSSKL.Mobile.Core\SSSKL.Mobile.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SSSKL.Mobile.Test" />
+  </ItemGroup>
+</Project>

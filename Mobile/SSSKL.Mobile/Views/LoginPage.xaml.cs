@@ -1,7 +1,7 @@
-using Microsoft.Maui.Controls.PlatformConfiguration;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 using SSSKL.Mobile.Core.Configuration;
-using SSSKL.Mobile.Core.Web;
+using SSSKL.Mobile.Presentation.Web;
 using SSSKL.Mobile.Services;
 
 namespace SSSKL.Mobile.Views;

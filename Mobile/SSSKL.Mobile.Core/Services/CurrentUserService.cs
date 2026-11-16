@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using SSSKL.Mobile.Core.Api;
-using SSSKL.Mobile.Core.Models;
+using SSSKL.Mobile.Domain.Models;
 
 namespace SSSKL.Mobile.Core.Services;
 

@@ -4,7 +4,7 @@
      safe area. -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:loc="clr-namespace:SSSKL.Mobile.Core.Localization;assembly=SSSKL.Mobile.Core"
+             xmlns:loc="clr-namespace:SSSKL.Mobile.Presentation.Localization;assembly=SSSKL.Mobile.Presentation"
              x:Class="SSSKL.Mobile.Views.WelcomePage"
              Title="{x:Static loc:Texts.AppName}"
              BackgroundColor="{StaticResource Brand}"

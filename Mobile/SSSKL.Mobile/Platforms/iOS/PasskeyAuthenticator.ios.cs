@@ -1,6 +1,7 @@
 using AuthenticationServices;
 using Foundation;
 using SSSKL.Mobile.Core.Auth;
+using SSSKL.Mobile.Infrastructure.Auth;
 using UIKit;
 
 namespace SSSKL.Mobile.Services;

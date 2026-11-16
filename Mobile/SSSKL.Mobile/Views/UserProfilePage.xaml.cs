@@ -1,5 +1,6 @@
+
 using SSSKL.Mobile.Core.Navigation;
-using SSSKL.Mobile.Core.ViewModels;
+using SSSKL.Mobile.Presentation.ViewModels;
 
 namespace SSSKL.Mobile.Views;
 

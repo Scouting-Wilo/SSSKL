@@ -1,7 +1,5 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text;
 using Microsoft.Extensions.Logging;
+using SSSKL.Mobile.Domain.Auth;
 
 namespace SSSKL.Mobile.Core.Auth;
 
@@ -47,15 +45,32 @@ public enum PasskeySignInStatus
 public sealed record PasskeySignInResult(PasskeySignInStatus Status, TokenSet? Tokens = null);
 
 /// <summary>
-/// Signs in with a passkey through the API, the way the SPA does but without a user name (a discoverable
-/// passkey: the API finds the user from it):
-/// <c>GET /api/v1/identity/PasskeyRequestOptions</c> → the platform's passkey sheet →
-/// <c>POST /api/v1/identity/PasskeyAssertion</c>, which answers with bearer tokens.
-/// The API keeps the challenge in a cookie between the two calls, so both go through one client with
-/// its own cookie container: <paramref name="createClient"/> is called once per attempt and the client
-/// is disposed afterwards.
+/// The API's passkey endpoints (implemented in Infrastructure). One sign-in attempt runs in one
+/// <see cref="IPasskeyApiSession"/>: the API keeps the challenge in a cookie between its two calls.
 /// </summary>
-public sealed class PasskeySignIn(Func<HttpClient> createClient, IPasskeyAuthenticator authenticator, ILogger<PasskeySignIn> logger)
+public interface IPasskeyApi
+{
+    IPasskeyApiSession StartSession();
+}
+
+public interface IPasskeyApiSession : IDisposable
+{
+    /// <summary><c>GET identity/PasskeyRequestOptions</c> without a user name: WebAuthn request options JSON.</summary>
+    Task<string> GetRequestOptionsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// <c>POST identity/PasskeyAssertion</c>: the bearer tokens, or null when the API rejects the passkey.
+    /// Throws <see cref="HttpRequestException"/> when offline or on a server error.
+    /// </summary>
+    Task<TokenSet?> SubmitAssertionAsync(string assertionJson, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Signs in with a passkey, the way the SPA does but without a user name (a discoverable passkey: the API
+/// finds the user from it): request options from the API → the platform's passkey sheet → the assertion back
+/// to the API, which answers with bearer tokens.
+/// </summary>
+public sealed class PasskeySignIn(IPasskeyApi api, IPasskeyAuthenticator authenticator, ILogger<PasskeySignIn> logger)
 {
     public bool IsSupported => authenticator.IsSupported;
 
@@ -66,34 +81,18 @@ public sealed class PasskeySignIn(Func<HttpClient> createClient, IPasskeyAuthent
             return new PasskeySignInResult(PasskeySignInStatus.NoPasskey);
         }
 
-        using var client = createClient();
+        using var session = api.StartSession();
         try
         {
-            string options;
-            using (var optionsResponse = await client.GetAsync("api/v1/identity/PasskeyRequestOptions", cancellationToken))
-            {
-                optionsResponse.EnsureSuccessStatusCode();
-                options = await optionsResponse.Content.ReadAsStringAsync(cancellationToken);
-            }
-
+            var options = await session.GetRequestOptionsAsync(cancellationToken);
             var assertion = await authenticator.GetAssertionAsync(options, cancellationToken);
-
-            using var content = new StringContent(assertion, Encoding.UTF8, "application/json");
-            using var response = await client.PostAsync("api/v1/identity/PasskeyAssertion", content, cancellationToken);
-            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest or HttpStatusCode.Forbidden)
+            var tokens = await session.SubmitAssertionAsync(assertion, cancellationToken);
+            if (tokens is null)
             {
-                logger.LogWarning("The API rejected the passkey ({Status})", (int)response.StatusCode);
+                logger.LogWarning("The API rejected the passkey");
                 return new PasskeySignInResult(PasskeySignInStatus.Rejected);
             }
-            response.EnsureSuccessStatusCode();
-
-            var body = await response.Content.ReadFromJsonAsync(ApiJsonContext.Default.AccessTokenResponse, cancellationToken);
-            if (body is null || string.IsNullOrEmpty(body.AccessToken) || string.IsNullOrEmpty(body.RefreshToken))
-            {
-                logger.LogError("Passkey sign-in returned no tokens");
-                return new PasskeySignInResult(PasskeySignInStatus.Failed);
-            }
-            return new PasskeySignInResult(PasskeySignInStatus.Success, new TokenSet(body.AccessToken, body.RefreshToken));
+            return new PasskeySignInResult(PasskeySignInStatus.Success, tokens);
         }
         catch (PasskeyCanceledException)
         {

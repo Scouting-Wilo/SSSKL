@@ -2,9 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:SSSKL.Mobile.Controls"
-             xmlns:vm="clr-namespace:SSSKL.Mobile.Core.ViewModels;assembly=SSSKL.Mobile.Core"
+             xmlns:vm="clr-namespace:SSSKL.Mobile.Presentation.ViewModels;assembly=SSSKL.Mobile.Presentation"
              xmlns:core="clr-namespace:SSSKL.Mobile.Core.Services;assembly=SSSKL.Mobile.Core"
-             xmlns:loc="clr-namespace:SSSKL.Mobile.Core.Localization;assembly=SSSKL.Mobile.Core"
+             xmlns:loc="clr-namespace:SSSKL.Mobile.Presentation.Localization;assembly=SSSKL.Mobile.Presentation"
              x:Class="SSSKL.Mobile.Views.SettingsPage"
              x:DataType="vm:SettingsViewModel"
              Title="{x:Static loc:Texts.Settings}">

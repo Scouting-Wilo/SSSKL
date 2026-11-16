@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Input;
 using SSSKL.Mobile.Core.Services;
+using SSSKL.Mobile.Presentation.Localization;
 
 namespace SSSKL.Mobile.Controls;
 
@@ -122,7 +123,7 @@ public sealed class SegmentedControl : ContentView
                 Resource(isSelected ? "HeadingLight" : "MutedLight"), Resource(isSelected ? "HeadingDark" : "MutedDark"));
             icon?.SetAppThemeColor(IconView.ColorProperty,
                 Resource(isSelected ? "Primary600" : "MutedLight"), Resource(isSelected ? "Primary400" : "MutedDark"));
-            SemanticProperties.SetHint(cell, isSelected ? Core.Localization.Texts.Selected : null);
+            SemanticProperties.SetHint(cell, isSelected ? Presentation.Localization.Texts.Selected : null);
         }
 
         _pill.IsVisible = selected >= 0;

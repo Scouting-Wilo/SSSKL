@@ -1,4 +1,5 @@
-using SSSKL.Mobile.Core.Models;
+
+using SSSKL.Mobile.Domain.Models;
 
 namespace SSSKL.Mobile.Core.Services;
 

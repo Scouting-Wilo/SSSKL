@@ -88,7 +88,7 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Test (Core)
+      - name: Test (layer projects)
         run: dotnet test Mobile/SSSKL.Mobile.Test
 
       - name: Setup Java

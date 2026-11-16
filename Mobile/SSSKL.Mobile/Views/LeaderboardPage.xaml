@@ -2,9 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:SSSKL.Mobile.Controls"
-             xmlns:vm="clr-namespace:SSSKL.Mobile.Core.ViewModels;assembly=SSSKL.Mobile.Core"
-             xmlns:models="clr-namespace:SSSKL.Mobile.Core.Models;assembly=SSSKL.Mobile.Core"
-             xmlns:loc="clr-namespace:SSSKL.Mobile.Core.Localization;assembly=SSSKL.Mobile.Core"
+             xmlns:vm="clr-namespace:SSSKL.Mobile.Presentation.ViewModels;assembly=SSSKL.Mobile.Presentation"
+             xmlns:models="clr-namespace:SSSKL.Mobile.Domain.Models;assembly=SSSKL.Mobile.Domain"
+             xmlns:loc="clr-namespace:SSSKL.Mobile.Presentation.Localization;assembly=SSSKL.Mobile.Presentation"
              x:Class="SSSKL.Mobile.Views.LeaderboardPage"
              x:DataType="vm:LeaderboardViewModel"
              Title="{x:Static loc:Texts.Leaderboard}">

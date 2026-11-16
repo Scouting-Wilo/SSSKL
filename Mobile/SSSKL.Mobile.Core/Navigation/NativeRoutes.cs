@@ -1,3 +1,5 @@
+using SSSKL.Mobile.Domain.Models;
+
 namespace SSSKL.Mobile.Core.Navigation;
 
 /// <summary>The app's native screens that an SPA route can lead to.</summary>

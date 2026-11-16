@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net11.0-android;net11.0-ios</TargetFrameworks>
     <!-- CI builds one platform per runner: -p:SssklTargetFrameworks=net11.0-android limits restore to it
-         (TargetFrameworks itself can't be passed: as a global property it would also retarget Core). -->
+         (TargetFrameworks itself can't be passed: as a global property it would also retarget the layer projects). -->
     <TargetFrameworks Condition="'$(SssklTargetFrameworks)' != ''">$(SssklTargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>SSSKL.Mobile</RootNamespace>
@@ -16,7 +16,7 @@
     <IsPackable>false</IsPackable>
 
     <!-- Release: Native AOT (fully trimmed, no JIT/interpreter fallback). Needs reflection-free code:
-         compiled bindings (x:DataType) and source-generated JSON (SSSKL.Mobile.Core ApiJsonContext).
+         compiled bindings (x:DataType) and source-generated JSON (SSSKL.Mobile.Infrastructure ApiJsonContext).
          Treat any IL2xxx/IL3xxx warning from `dotnet publish` as a bug.
          Android AOT is still experimental (XA1040): -p:SssklAndroidAot=false builds a Release without it. -->
     <PublishAot Condition="'$(Configuration)' == 'Release'">true</PublishAot>
@@ -124,6 +124,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SSSKL.Mobile.Core\SSSKL.Mobile.Core.csproj" />
+    <!-- The app is the composition root (onion: Domain ← Application ← Infrastructure / Presentation). -->
+    <ProjectReference Include="..\SSSKL.Mobile.Infrastructure\SSSKL.Mobile.Infrastructure.csproj" />
+    <ProjectReference Include="..\SSSKL.Mobile.Presentation\SSSKL.Mobile.Presentation.csproj" />
   </ItemGroup>
 </Project>
