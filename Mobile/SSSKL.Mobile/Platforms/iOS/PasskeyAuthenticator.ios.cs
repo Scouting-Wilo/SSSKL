@@ -44,7 +44,14 @@ public sealed partial class PasskeyAuthenticator
         controller.Delegate = controllerDelegate;
         controller.PresentationContextProvider = presentation;
 
-        await using var registration = cancellationToken.Register(() => MainThread.BeginInvokeOnMainThread(controller.Cancel));
+        await using var registration = cancellationToken.Register(() => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // Always true here (checked above), but the analyzer doesn't follow the guard into the lambda.
+            if (OperatingSystem.IsIOSVersionAtLeast(16))
+            {
+                controller.Cancel();
+            }
+        }));
         controller.PerformRequests();
         var assertion = await completion.Task;
         GC.KeepAlive(controllerDelegate);
@@ -61,7 +68,8 @@ public sealed partial class PasskeyAuthenticator
 
     private static string? Attachment(ASAuthorizationPlatformPublicKeyCredentialAssertion assertion)
     {
-        if (!OperatingSystem.IsIOSVersionAtLeast(16, 6))
+        // ASAuthorizationPlatformPublicKeyCredentialAssertion.Attachment needs iOS 17.
+        if (!OperatingSystem.IsIOSVersionAtLeast(17))
         {
             return null;
         }
