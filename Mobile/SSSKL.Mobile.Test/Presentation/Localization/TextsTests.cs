@@ -24,9 +24,9 @@ public class TextsTests
 
         foreach (var property in properties)
         {
-            var value = property.GetValue(null) as string;
+            var value = property.GetValue(null).Should().BeOfType<string>(property.Name).Subject;
             value.Should().NotBeNullOrWhiteSpace(property.Name);
-            value.Should().Be(value!.Trim(), $"{property.Name} has no leading or trailing whitespace");
+            value.Should().Be(value.Trim(), $"{property.Name} has no leading or trailing whitespace");
         }
     }
 
