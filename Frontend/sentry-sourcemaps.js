@@ -39,18 +39,6 @@ function removeSourceMaps() {
   console.log(`Removed ${removed} source map file(s) from the build output.`);
 }
 
-/** Returns the file's content, or undefined when it doesn't exist. */
-function readIfExists(file, encoding) {
-  try {
-    return fs.readFileSync(file, encoding);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return undefined;
-    }
-    throw error;
-  }
-}
-
 /**
  * Recomputes the SHA-1 hashes in ngsw.json (the same hash Angular's ngsw-config generator uses) from the
  * files as they are now. Rehashing in place keeps the manifest identical to the one the Angular CLI wrote
@@ -59,21 +47,18 @@ function readIfExists(file, encoding) {
  */
 function rehashServiceWorkerManifest() {
   const manifestPath = path.join(dist, 'ngsw.json');
-  // Read without an existsSync check first, so the file can't change between the check and the use.
-  const manifestJson = readIfExists(manifestPath, 'utf8');
-  if (manifestJson === undefined) {
+  if (!fs.existsSync(manifestPath)) {
     return;
   }
-  const manifest = JSON.parse(manifestJson);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   let changed = 0;
   for (const url of Object.keys(manifest.hashTable ?? {})) {
     const file = path.join(dist, ...url.split('/').filter(Boolean));
-    const content = readIfExists(file);
-    if (content === undefined) {
+    if (!fs.existsSync(file)) {
       continue;
     }
     // ngsw.json's hashTable is defined as SHA-1; this is a cache key, not a security check.
-    const hash = crypto.createHash('sha1').update(content).digest('hex'); // NOSONAR
+    const hash = crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex'); // NOSONAR
     if (manifest.hashTable[url] !== hash) {
       manifest.hashTable[url] = hash;
       changed++;
