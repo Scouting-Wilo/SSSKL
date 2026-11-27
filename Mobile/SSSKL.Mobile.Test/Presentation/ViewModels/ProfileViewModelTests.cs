@@ -78,7 +78,7 @@ public class ProfileViewModelTests
     public async Task PictureActions_WithoutPicture_PicksAPhotoStraightAway()
     {
         // Arrange
-        _photoPicker.PickAsync().Returns((PickedPhoto?)null);
+        _photoPicker.PickAsync().Returns(default(PickedPhoto?));
         var sut = CreateSut();
 
         // Act
@@ -112,7 +112,7 @@ public class ProfileViewModelTests
     {
         // Arrange
         _dialogs.ActionSheetAsync(Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string[]>())
-            .Returns((string?)null);
+            .Returns(default(string?));
         var sut = CreateSut();
         sut.PictureUrl = "https://api.test/picture";
 

@@ -49,7 +49,6 @@ describe('WhatsNewModalComponent', () => {
   });
 
   it('should not show modal by default', () => {
-    const dialog = fixture.nativeElement.querySelector('p-dialog');
     // PrimeNG Dialog might still be in DOM but hidden
     expect(component.isVisible).toBe(false);
   });

@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
  * - 403 → redirect to home (feature is role-restricted and user lacks access)
  * - other errors (network etc.) → allow through; the page will handle errors itself
  */
-export const quotesGuard: CanActivateFn = () => {
+export const quotesGuard: CanActivateFn = (_route, _state) => {
     const http = inject(HttpClient);
     const router = inject(Router);
     const authService = inject(AuthService);

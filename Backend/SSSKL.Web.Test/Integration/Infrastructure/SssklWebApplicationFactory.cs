@@ -20,7 +20,7 @@ namespace SSSKL.Web.Test.Integration.Infrastructure;
 /// </summary>
 public sealed class SssklWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"ssskl-it-{Guid.NewGuid():N}.db");
+    private readonly string _dbPath = Path.Join(Path.GetTempPath(), $"ssskl-it-{Guid.NewGuid():N}.db");
     private readonly Dictionary<string, string?> _settings = new();
     private readonly List<Action<IServiceCollection>> _serviceOverrides = [];
     private string _environment = TestEnvironments.IntegrationTest;

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ReactionDto, ToggleReactionRequest, ReactionTargetType } from '../models/reaction.model';
+import { ReactionDto, ReactionTargetType } from '../models/reaction.model';
 
 @Injectable({
   providedIn: 'root'

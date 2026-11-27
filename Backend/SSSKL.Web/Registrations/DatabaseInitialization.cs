@@ -34,7 +34,8 @@ public static class DatabaseInitialization
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         foreach (var role in Roles.AllProtected)
         {
-            if (!await roleManager.RoleExistsAsync(role))
+            var exists = await roleManager.RoleExistsAsync(role);
+            if (!exists)
             {
                 await roleManager.CreateAsync(new IdentityRole(role));
             }

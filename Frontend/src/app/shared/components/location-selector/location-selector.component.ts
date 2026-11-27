@@ -10,15 +10,12 @@ import {
   signal,
   OnDestroy,
   CUSTOM_ELEMENTS_SCHEMA,
-  HostListener,
   ChangeDetectionStrategy,
 } from '@angular/core';
 // Triggering recompile to ensure Google Maps replacement is picked up
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 import { ButtonModule } from 'primeng/button';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
@@ -182,7 +179,8 @@ export class LocationSelectorComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const apiLoaded = this.apiLoaded();
       const container = this.mapContainer()?.nativeElement;
-      const isDark = this.themeService.isDark();
+      // Read only to track it: the map is re-initialised in the new theme.
+      this.themeService.isDark();
 
       if (apiLoaded && container) {
         this.initMap();

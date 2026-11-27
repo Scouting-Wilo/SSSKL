@@ -87,6 +87,7 @@ public sealed partial class StatsViewModel(
 
     public bool HasStats => Sections.Count > 0;
 
+    /// <summary>Sets whose statistics <see cref="LoadAsync"/> shows.</summary>
     /// <param name="userId">Another member's id (admins only); null for your own.</param>
     public void Initialize(string? userId) => _requestedUserId = userId;
 
@@ -104,8 +105,8 @@ public sealed partial class StatsViewModel(
             var isOwn = _userId == me.Id;
 
             var statsTask = api.GetStatsAsync(_userId);
-            var achievementsTask = TryAsync(() => api.GetAchievementEntriesAsync(_userId), (IReadOnlyList<AchievementEntry>)[]);
-            var nameTask = isOwn ? Task.FromResult<string?>(null) : TryAsync(async () => (string?)(await api.GetUserProfileAsync(_userId)).DisplayName, null);
+            var achievementsTask = TryAsync<IReadOnlyList<AchievementEntry>>(() => api.GetAchievementEntriesAsync(_userId), []);
+            var nameTask = isOwn ? Task.FromResult<string?>(null) : TryAsync<string?>(async () => (await api.GetUserProfileAsync(_userId)).DisplayName, null);
             var stats = await statsTask;
             var achievements = await achievementsTask;
             var name = await nameTask;

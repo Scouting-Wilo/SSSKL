@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, effect, ViewChild, HostListener, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { DrawerModule } from 'primeng/drawer';

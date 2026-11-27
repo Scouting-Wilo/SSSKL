@@ -27,6 +27,7 @@ public enum NativePage
     Chooser
 }
 
+/// <summary>An SPA route the app shows as a native page.</summary>
 /// <param name="Id">The route's id segment (a user or achievement id), for pages that show one item.</param>
 /// <param name="UserId">The <c>?userId=</c> of stats and achievements: another user's (null: your own).</param>
 public sealed record NativeRoute(NativePage Page, string? Id = null, string? UserId = null);

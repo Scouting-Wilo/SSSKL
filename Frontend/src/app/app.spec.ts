@@ -7,7 +7,6 @@ import { AchievementPopupService } from './features/achievements/services/achiev
 import { UserProfileDrawerService } from './core/services/user-profile-drawer.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { provideRouter } from '@angular/router';
-import { PrimeNG } from 'primeng/config';
 import { ThemeService } from './core/services/theme.service';
 import { PushNotificationService } from './core/services/push-notification.service';
 import { SwPush } from '@angular/service-worker';

@@ -20,7 +20,8 @@ public sealed class LocalFileBlobStorageAgent : IBlobStorageAgent
     {
         var configured = configuration[LocalRootConfigurationKey];
         if (string.IsNullOrWhiteSpace(configured)) configured = DefaultLocalRoot;
-        _root = Path.GetFullPath(Path.Combine(environment.ContentRootPath, configured));
+        // An absolute setting is used as is; a relative one resolves against the content root.
+        _root = Path.GetFullPath(configured, environment.ContentRootPath);
         Directory.CreateDirectory(_root);
     }
 
@@ -52,7 +53,7 @@ public sealed class LocalFileBlobStorageAgent : IBlobStorageAgent
     // Keep every blob inside the root folder, whatever the file name contains.
     private string ResolvePath(string fileName)
     {
-        var path = Path.GetFullPath(Path.Combine(_root, fileName));
+        var path = Path.GetFullPath(fileName, _root);
         if (!path.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
             throw new ArgumentException("Invalid blob file name.", nameof(fileName));
         return path;

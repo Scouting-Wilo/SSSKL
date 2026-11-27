@@ -43,7 +43,7 @@ public class GlobalSettingsControllerTests
     [TestMethod]
     public async Task GetSetting_WhenNotSet_ReturnsNoContent()
     {
-        _sender.Send(Arg.Any<GetGlobalSettingQuery>(), Arg.Any<CancellationToken>()).Returns((GlobalSettingDto?)null);
+        _sender.Send(Arg.Any<GetGlobalSettingQuery>(), Arg.Any<CancellationToken>()).Returns(default(GlobalSettingDto?));
 
         var result = await _sut.GetSetting("k");
 

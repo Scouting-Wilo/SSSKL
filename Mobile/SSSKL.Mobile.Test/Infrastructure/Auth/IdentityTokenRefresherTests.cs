@@ -15,7 +15,8 @@ public class IdentityTokenRefresherTests
         // Arrange
         var inner = new StubHttpHandler((_, _) => StubHttpHandler.Json(
             """{"tokenType":"Bearer","accessToken":"a2","expiresIn":3600,"refreshToken":"r2"}"""));
-        var sut = new IdentityTokenRefresher(new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") });
+        using var http = new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") };
+        var sut = new IdentityTokenRefresher(http);
 
         // Act
         var result = await sut.RefreshAsync("r1", TestContext.CancellationToken);
@@ -33,7 +34,8 @@ public class IdentityTokenRefresherTests
     {
         // Arrange
         var inner = new StubHttpHandler((_, _) => StubHttpHandler.Status(status));
-        var sut = new IdentityTokenRefresher(new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") });
+        using var http = new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") };
+        var sut = new IdentityTokenRefresher(http);
 
         // Act
         var result = await sut.RefreshAsync("r1", TestContext.CancellationToken);
@@ -47,7 +49,8 @@ public class IdentityTokenRefresherTests
     {
         // Arrange
         var inner = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.InternalServerError));
-        var sut = new IdentityTokenRefresher(new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") });
+        using var http = new HttpClient(inner) { BaseAddress = new Uri("https://api.test/") };
+        var sut = new IdentityTokenRefresher(http);
 
         // Act
         var act = () => sut.RefreshAsync("r1", TestContext.CancellationToken);

@@ -1,4 +1,4 @@
-import { ApplicationConfig, ErrorHandler, provideAppInitializer, provideBrowserGlobalErrorListeners, inject, LOCALE_ID, isDevMode } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, provideAppInitializer, provideBrowserGlobalErrorListeners, inject, LOCALE_ID } from '@angular/core';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { registerLocaleData } from '@angular/common';

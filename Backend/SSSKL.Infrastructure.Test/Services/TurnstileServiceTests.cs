@@ -21,8 +21,24 @@ public class TurnstileServiceTests : RepositoryTest
     [TestInitialize]
     public void TestInitialize() => InitializeDatabase();
 
+    // HttpClients and caches the tests created, disposed after each test.
+    private readonly List<IDisposable> _disposables = [];
+
     [TestCleanup]
-    public void TestCleanup() => CleanupDatabase();
+    public void TestCleanup()
+    {
+        foreach (var disposable in _disposables)
+        {
+            disposable.Dispose();
+        }
+        CleanupDatabase();
+    }
+
+    private T Track<T>(T disposable) where T : IDisposable
+    {
+        _disposables.Add(disposable);
+        return disposable;
+    }
 
     private void Configure(string enabled = "true", string? siteKey = "site-key", string? secret = "secret-key", string? hostnames = null)
     {
@@ -41,24 +57,39 @@ public class TurnstileServiceTests : RepositoryTest
     private sealed class StubHandler(Func<HttpRequestMessage, Task<HttpResponseMessage>> respond) : HttpMessageHandler
     {
         public List<string> RequestBodies { get; } = [];
+        private readonly List<HttpResponseMessage> _responses = [];
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _responses.ForEach(response => response.Dispose());
+            }
+            base.Dispose(disposing);
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             RequestBodies.Add(await request.Content!.ReadAsStringAsync(cancellationToken));
-            return await respond(request);
+            var response = await respond(request);
+            _responses.Add(response);
+            return response;
         }
     }
 
+    // The handler disposes the responses it returned.
     private static StubHandler Responding(string json, HttpStatusCode status = HttpStatusCode.OK) =>
-        new(_ => Task.FromResult(new HttpResponseMessage(status)
+        new(_ =>
         {
-            Content = new StringContent(json, Encoding.UTF8, "application/json")
-        }));
+            var response = new HttpResponseMessage(status);
+            response.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            return Task.FromResult(response);
+        });
 
     private TurnstileService Create(HttpMessageHandler handler) =>
-        new(new HttpClient(handler),
+        new(Track(new HttpClient(handler)),
             new MockDbContextFactory(GetOptions()),
-            new MemoryCache(new MemoryCacheOptions()),
+            Track(new MemoryCache(new MemoryCacheOptions())),
             Options.Create(new TurnstileOptions { AllowedHostnames = ["ssskl.scoutingwilo.nl"] }),
             NullLogger<TurnstileService>.Instance);
 

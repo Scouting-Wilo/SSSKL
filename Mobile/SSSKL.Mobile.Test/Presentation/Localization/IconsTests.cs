@@ -43,7 +43,7 @@ public class IconsTests
         foreach (var name in names)
         {
             // MAUI turns name.svg into name.png.
-            var svg = Path.Combine(ImagesDirectory, Path.ChangeExtension(name, ".svg"));
+            var svg = Path.Join(ImagesDirectory, Path.ChangeExtension(name, ".svg"));
             File.Exists(svg).Should().BeTrue($"{name} needs {Path.GetFileName(svg)}");
         }
     }
@@ -52,7 +52,7 @@ public class IconsTests
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
         {
-            var candidate = Path.Combine(dir.FullName, "SSSKL.Mobile", "Resources", "Images");
+            var candidate = Path.Join(dir.FullName, "SSSKL.Mobile", "Resources", "Images");
             if (Directory.Exists(candidate))
             {
                 return candidate;

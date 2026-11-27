@@ -98,10 +98,9 @@ public class ApplicationUserController(ISender sender, ILogger<ApplicationUserCo
 
     // PUT v1/applicationuser/me - update current user (only phone, name, surname)
     [HttpPut("me")]
-    public async Task<IActionResult> UpdateMe([FromBody] ApplicationUserSelfUpdateDto? dto)
+    public async Task<IActionResult> UpdateMe([FromBody] ApplicationUserSelfUpdateDto dto)
     {
-        if (dto == null) return BadRequest();
-
+        // [ApiController] already answers 400 when the body is missing, because the parameter isn't nullable.
         var username = User.Identity?.Name;
         if (string.IsNullOrWhiteSpace(username)) return Unauthorized();
 

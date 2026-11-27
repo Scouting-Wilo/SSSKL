@@ -789,7 +789,8 @@ export default class EventDetailComponent implements OnInit {
 
   private stripHtml(html: string | undefined): string {
     if (!html) return '';
-    return html.replace(/<[^>]*>?/gm, '');
+    // DOMParser builds an inert document (no scripts run), so textContent is the plain text without any markup.
+    return new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '';
   }
 
   rsvp(status: 'Accepted' | 'Declined'): void {

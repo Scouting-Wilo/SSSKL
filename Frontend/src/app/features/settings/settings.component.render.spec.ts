@@ -15,6 +15,7 @@ describe('SettingsComponent (render)', () => {
   // PrimeNG's tab list measures itself; jsdom has no ResizeObserver.
   beforeAll(() => {
     globalThis.ResizeObserver ??= class {
+      constructor(readonly callback: ResizeObserverCallback) {}
       observe() {}
       unobserve() {}
       disconnect() {}

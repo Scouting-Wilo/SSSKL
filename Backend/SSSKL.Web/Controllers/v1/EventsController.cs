@@ -13,6 +13,7 @@ using SSSKL.Application.Features.Events.Queries.GetEvents;
 using SSSKL.Application.Util;
 using SSSKL.Contracts.Dto.Api;
 using SSSKL.Contracts.Dto.Api.v1;
+using SSSKL.Web.Logging;
 
 namespace SSSKL.Web.Controllers.v1;
 
@@ -104,7 +105,7 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
         {
             logger.LogWarning(
                 "Event image update rejected: no file content was received. EventId={EventId}, UserId={UserId}, RequestContentLength={RequestContentLength}",
-                id, userId, Request.ContentLength);
+                id, LogSanitizer.Clean(userId), Request.ContentLength);
             return BadRequest("Image file is required.");
         }
 
@@ -113,7 +114,7 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
         {
             logger.LogWarning(
                 "Event image update rejected: unsupported content type. EventId={EventId}, UserId={UserId}, FileName={FileName}, RawContentType={RawContentType}, Length={Length}",
-                id, userId, image.FileName, image.ContentType, bytes.Length);
+                id, LogSanitizer.Clean(userId), LogSanitizer.Clean(image.FileName), LogSanitizer.Clean(image.ContentType), bytes.Length);
             return BadRequest(UnsupportedImageMessage);
         }
 
@@ -122,7 +123,8 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
         {
             logger.LogInformation(
                 "Event image update accepted for processing: EventId={EventId}, UserId={UserId}, IsAdmin={IsAdmin}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
-                id, userId, isAdmin, image.FileName, image.ContentType, contentType, bytes.Length);
+                id, LogSanitizer.Clean(userId), isAdmin, LogSanitizer.Clean(image.FileName), LogSanitizer.Clean(image.ContentType),
+                LogSanitizer.Clean(contentType), bytes.Length);
         }
 
         try
@@ -136,7 +138,8 @@ public class EventsController(ISender sender, ILogger<EventsController> logger) 
             logger.LogWarning(
                 ex,
                 "Event image update rejected by handler: {Reason}. EventId={EventId}, UserId={UserId}, FileName={FileName}, RawContentType={RawContentType}, NormalizedContentType={NormalizedContentType}, Length={Length}",
-                ex.Message, id, userId, image.FileName, image.ContentType, contentType, bytes.Length);
+                LogSanitizer.Clean(ex.Message), id, LogSanitizer.Clean(userId), LogSanitizer.Clean(image.FileName),
+                LogSanitizer.Clean(image.ContentType), LogSanitizer.Clean(contentType), bytes.Length);
             return BadRequest(UnsupportedImageMessage);
         }
     }

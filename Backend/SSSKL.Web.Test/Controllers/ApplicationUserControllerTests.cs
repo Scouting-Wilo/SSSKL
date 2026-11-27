@@ -434,7 +434,7 @@ public class ApplicationUserControllerTests
     [TestMethod]
     public async Task GetLatestRecalculateAllStatsStatus_WhenNone_ReturnsNotFound()
     {
-        _sender.Send(new GetStatsRecalculationStatusQuery(), Arg.Any<CancellationToken>()).Returns((RecalculationJobDto?)null);
+        _sender.Send(new GetStatsRecalculationStatusQuery(), Arg.Any<CancellationToken>()).Returns(default(RecalculationJobDto?));
 
         var result = await _sut.GetLatestRecalculateAllStatsStatus();
 

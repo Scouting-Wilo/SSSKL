@@ -48,6 +48,7 @@ public static class SssklTelemetry
         TopUpAmount.Add((double)amount);
     }
 
+    /// <summary>Counts a sent web push notification.</summary>
     /// <param name="outcome">success, expired or failed</param>
     public static void RecordPush(string outcome) =>
         PushSent.Add(1, new KeyValuePair<string, object?>("outcome", outcome));

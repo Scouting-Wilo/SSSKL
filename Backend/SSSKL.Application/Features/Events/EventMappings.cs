@@ -5,6 +5,7 @@ namespace SSSKL.Application.Features.Events;
 
 public static class EventMappings
 {
+    /// <summary>Maps an event to its DTO.</summary>
     /// <param name="userId">The viewing user; fills <see cref="EventDto.UserResponse"/> when set.</param>
     public static EventDto ToDto(this Event e, string? userId)
     {

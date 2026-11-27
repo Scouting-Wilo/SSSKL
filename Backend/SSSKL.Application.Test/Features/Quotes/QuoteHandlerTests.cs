@@ -135,7 +135,7 @@ public class QuoteHandlerTests
         // Arrange
         var quoteId = Guid.NewGuid();
         _quoteRepository.GetById(quoteId).Returns(new Quote { Id = quoteId });
-        _quoteRepository.GetVote(quoteId, UserId).Returns((QuoteVote?)null);
+        _quoteRepository.GetVote(quoteId, UserId).Returns(default(QuoteVote?));
         var sut = new ToggleQuoteVoteHandler(_quoteRepository, _mockUserStatRepository, _mockEventDispatcher, _quoteAccess);
 
         // Act
@@ -152,7 +152,7 @@ public class QuoteHandlerTests
     {
         // Arrange
         var quoteId = Guid.NewGuid();
-        _quoteRepository.GetById(quoteId).Returns((Quote?)null);
+        _quoteRepository.GetById(quoteId).Returns(default(Quote?));
         var sut = new ToggleQuoteVoteHandler(_quoteRepository, _mockUserStatRepository, _mockEventDispatcher, _quoteAccess);
 
         // Act
@@ -270,7 +270,7 @@ public class QuoteHandlerTests
     public async Task DeleteQuote_WhenMissing_ShouldThrowNotFound()
     {
         // Arrange
-        _quoteRepository.GetById(Arg.Any<Guid>()).Returns((Quote?)null);
+        _quoteRepository.GetById(Arg.Any<Guid>()).Returns(default(Quote?));
         var sut = new DeleteQuoteHandler(_quoteRepository, _mockUserStatRepository, _quoteAccess);
 
         // Act

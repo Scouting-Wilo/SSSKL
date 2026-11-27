@@ -352,7 +352,7 @@ public class OrderCommandHandlerTests
             Amount = 1
         };
 
-        _userRepository.GetById(actingUserId).Returns((ApplicationUser)null!);
+        _userRepository.GetById(actingUserId).Returns(default(ApplicationUser)!);
         _userRepository.GetByIds(Arg.Any<IEnumerable<string>>()).Returns(new List<ApplicationUser> { targetUser });
         _productRepository.GetByIds(Arg.Any<IEnumerable<Guid>>()).Returns(new List<Product> { product });
 

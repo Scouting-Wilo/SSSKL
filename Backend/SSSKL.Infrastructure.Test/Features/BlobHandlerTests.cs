@@ -57,7 +57,7 @@ public class BlobHandlerTests
     public async Task GetBlobImage_WhenFound_ReturnsStreamWithContentType()
     {
         var id = await AddBlob("event.png", "image/png");
-        var stream = new MemoryStream([0x01, 0x02]);
+        using var stream = new MemoryStream([0x01, 0x02]);
         _blobAgent.OpenDownloadStreamAsync("event.png").Returns(stream);
 
         var result = await new GetBlobImageHandler(_repository, _blobAgent).Handle(new GetBlobImageQuery(id), CancellationToken.None);
@@ -89,7 +89,8 @@ public class BlobHandlerTests
     public async Task GetSocialPreview_WhenFound_ReturnsJpegAtLeast300Wide()
     {
         var id = await AddBlob("social.png", "image/png");
-        _blobAgent.OpenDownloadStreamAsync("social.png").Returns(new MemoryStream(PngBytes));
+        using var source = new MemoryStream(PngBytes);
+        _blobAgent.OpenDownloadStreamAsync("social.png").Returns(source);
 
         var result = await new GetSocialPreviewHandler(_repository, _blobAgent).Handle(new GetSocialPreviewQuery(id), CancellationToken.None);
 

@@ -307,7 +307,7 @@ public class OrderControllerTests
     public async Task GetCsvExportStatus_WhenMissing_ReturnsNotFound()
     {
         var jobId = Guid.NewGuid();
-        _sender.Send(new GetOrderCsvExportStatusQuery(jobId), Arg.Any<CancellationToken>()).Returns((CsvExportJobDto?)null);
+        _sender.Send(new GetOrderCsvExportStatusQuery(jobId), Arg.Any<CancellationToken>()).Returns(default(CsvExportJobDto?));
 
         var result = await _sut.GetCsvExportStatus(jobId);
 
@@ -333,7 +333,7 @@ public class OrderControllerTests
     public async Task DownloadCsvExport_WhenNotReadyOrMissing_ReturnsNotFound()
     {
         var jobId = Guid.NewGuid();
-        _sender.Send(new GetOrderCsvExportFileQuery(jobId), Arg.Any<CancellationToken>()).Returns((CsvExportFile?)null);
+        _sender.Send(new GetOrderCsvExportFileQuery(jobId), Arg.Any<CancellationToken>()).Returns(default(CsvExportFile?));
 
         var result = await _sut.DownloadCsvExport(jobId);
 

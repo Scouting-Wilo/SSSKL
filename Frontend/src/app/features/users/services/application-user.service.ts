@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApplicationUserDetailedDto, ApplicationUserDto, ApplicationUserUpdateDto, PaginatedUsers } from '../../../core/models/application-user.model';
+import { ApplicationUserDetailedDto, ApplicationUserUpdateDto, PaginatedUsers } from '../../../core/models/application-user.model';
 import { UserStat } from '../../../core/models/user-stat.model';
 import { RecalculationJob } from '../../../core/models/recalculation-job.model';
 

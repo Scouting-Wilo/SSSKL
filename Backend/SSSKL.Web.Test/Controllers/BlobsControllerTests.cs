@@ -29,7 +29,8 @@ public class BlobsControllerTests
     public async Task GetEventImage_ReturnsFileWithContentType()
     {
         var id = Guid.NewGuid();
-        _sender.Send(new GetBlobImageQuery(id), Arg.Any<CancellationToken>()).Returns(new BlobImage(new MemoryStream(), "image/png"));
+        using var content = new MemoryStream();
+        _sender.Send(new GetBlobImageQuery(id), Arg.Any<CancellationToken>()).Returns(new BlobImage(content, "image/png"));
 
         var result = await _sut.GetEventImage(id);
 
@@ -41,7 +42,8 @@ public class BlobsControllerTests
     {
         var id = Guid.NewGuid();
         var createdOn = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
-        _sender.Send(new GetSocialPreviewQuery(id), Arg.Any<CancellationToken>()).Returns(new SocialPreview(new MemoryStream(), createdOn));
+        using var content = new MemoryStream();
+        _sender.Send(new GetSocialPreviewQuery(id), Arg.Any<CancellationToken>()).Returns(new SocialPreview(content, createdOn));
 
         var result = await _sut.GetSocialPreview(id);
 

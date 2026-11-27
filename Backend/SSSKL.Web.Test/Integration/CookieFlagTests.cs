@@ -49,7 +49,7 @@ namespace SSSKL.Web.Test.Integration
             });
 
             var registerPayload = new { email = TestEmail, userName = TestEmail, password = TestPassword, name = "Integration", surname = "Flag" };
-            var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
+            using var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
             var regResponse = await client.PostAsync("/api/v1/identity/register", regContent, TestContext.CancellationToken);
             regResponse.EnsureSuccessStatusCode();
 
@@ -63,7 +63,7 @@ namespace SSSKL.Web.Test.Integration
 
             // Act: login with useCookies=true to get identity cookies
             var loginPayload = new { userName = TestEmail, password = TestPassword };
-            var content = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
+            using var content = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync("/api/v1/identity/login?useCookies=true", content, TestContext.CancellationToken);
 

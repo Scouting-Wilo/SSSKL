@@ -52,7 +52,8 @@ public class SafeImageLoaderTests
     [TestMethod]
     public async Task LoadAsync_NormalImage_Loads()
     {
-        using var image = await SafeImageLoader.LoadAsync(new MemoryStream(Png(20, 10)), TestContext.CancellationToken);
+        using var stream = new MemoryStream(Png(20, 10));
+        using var image = await SafeImageLoader.LoadAsync(stream, TestContext.CancellationToken);
 
         image.Width.Should().Be(20);
         image.Height.Should().Be(10);
@@ -63,7 +64,8 @@ public class SafeImageLoaderTests
     {
         var bomb = WithDeclaredSize(Png(1, 1), 50_000, 50_000);
 
-        var act = () => SafeImageLoader.LoadAsync(new MemoryStream(bomb), TestContext.CancellationToken);
+        using var stream = new MemoryStream(bomb);
+        var act = () => SafeImageLoader.LoadAsync(stream, TestContext.CancellationToken);
 
         await act.Should().ThrowAsync<InvalidImageContentException>();
     }
@@ -71,7 +73,7 @@ public class SafeImageLoaderTests
     [TestMethod]
     public async Task LoadAsync_NonSeekableStream_Loads()
     {
-        var stream = new NonSeekableStream(Png(4, 4));
+        using var stream = new NonSeekableStream(Png(4, 4));
 
         using var image = await SafeImageLoader.LoadAsync(stream, TestContext.CancellationToken);
 
@@ -81,7 +83,8 @@ public class SafeImageLoaderTests
     [TestMethod]
     public async Task LoadAsync_NotAnImage_ThrowsImageFormatException()
     {
-        var act = () => SafeImageLoader.LoadAsync(new MemoryStream("hello"u8.ToArray()), TestContext.CancellationToken);
+        using var stream = new MemoryStream("hello"u8.ToArray());
+        var act = () => SafeImageLoader.LoadAsync(stream, TestContext.CancellationToken);
 
         await act.Should().ThrowAsync<ImageFormatException>();
     }

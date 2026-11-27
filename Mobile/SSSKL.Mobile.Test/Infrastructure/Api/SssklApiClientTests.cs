@@ -12,8 +12,23 @@ public class SssklApiClientTests
 {
     public TestContext TestContext { get; set; } = null!;
 
-    private static SssklApiClient CreateSut(StubHttpHandler handler) =>
-        new(new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") });
+    private readonly List<HttpClient> _clients = [];
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        foreach (var client in _clients)
+        {
+            client.Dispose();
+        }
+    }
+
+    private SssklApiClient CreateSut(StubHttpHandler handler)
+    {
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.test/") };
+        _clients.Add(http);
+        return new SssklApiClient(http);
+    }
 
     [TestMethod]
     [DataRow(HttpStatusCode.NoContent)]

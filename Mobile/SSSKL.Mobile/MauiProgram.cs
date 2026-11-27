@@ -133,7 +133,7 @@ public static class MauiProgram
         var web = metadata.FirstOrDefault(m => m.Key == "SssklWebUrl")?.Value;
         // Debug-only defaults for the local dev server: 10.0.2.2 is the Android emulator's alias for the host
         // machine, and it serves plain HTTP. Release builds always set SssklWebUrl (https).
-        var host = DeviceInfo.Platform == DevicePlatform.Android ? "10.0.2.2" : "localhost"; // NOSONAR
+        var host = OperatingSystem.IsAndroid() ? "10.0.2.2" : "localhost"; // NOSONAR
         var webUrl = new Uri(web ?? $"http://{host}:4300"); // NOSONAR
         return new AppEndpoints(api is null ? webUrl : new Uri(api), webUrl);
     }

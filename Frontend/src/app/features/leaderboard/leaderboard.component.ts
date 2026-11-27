@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal, effect, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';

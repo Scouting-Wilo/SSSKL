@@ -117,7 +117,7 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
 
             var senderName = settings.GetValueOrDefault(GlobalSettingsKeys.EmailSenderName, "SSSKL")?.Trim() ?? "SSSKL";
 
-            var message = new MimeMessage();
+            using var message = new MimeMessage();
             message.From.Add(new MailboxAddress(senderName, senderEmail));
             message.To.Add(new MailboxAddress("", email));
             message.Subject = subject;
@@ -146,7 +146,8 @@ public partial class SmtpEmailSender : IEmailSender<ApplicationUser>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Detailed failure sending email to {Email}", email);
+            // The address stays out of this log: it's personal data, and the exception says what went wrong.
+            _logger.LogError(ex, "Detailed failure sending email");
             throw;
         }
     }
