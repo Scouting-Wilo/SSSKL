@@ -9,7 +9,7 @@ public static class AuthenticationRegistrations
 {
     private const string BearerOrCookieScheme = "BearerOrCookie";
 
-    public static IServiceCollection AddAuthenticationRegistrations(this IServiceCollection services, CookieSecurePolicy cookieSecurePolicy, string websiteDomain)
+    public static IServiceCollection AddAuthenticationRegistrations(this IServiceCollection services, CookieSecurePolicy cookieSecurePolicy, string websiteDomain, IEnumerable<string>? extraPasskeyOrigins = null)
     {
         var authBuilder = services.AddAuthentication(options =>
         {
@@ -76,9 +76,12 @@ public static class AuthenticationRegistrations
             .AddDefaultTokenProviders()
             .AddApiEndpoints();
 
+        var passkeyOrigins = new PasskeyOriginPolicy(websiteDomain, extraPasskeyOrigins);
         services.Configure<IdentityPasskeyOptions>(options =>
         {
             options.ServerDomain = websiteDomain;
+            // The SPA (Origin header) plus the mobile app's origins, see PasskeyOriginPolicy.
+            options.ValidateOrigin = context => ValueTask.FromResult(passkeyOrigins.IsAllowed(context));
         });
 
         return services;

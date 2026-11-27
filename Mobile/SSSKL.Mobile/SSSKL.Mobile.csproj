@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net11.0-android;net11.0-ios</TargetFrameworks>
     <!-- CI builds one platform per runner: -p:SssklTargetFrameworks=net11.0-android limits restore to it
-         (TargetFrameworks itself can't be passed: as a global property it would also retarget Core). -->
+         (TargetFrameworks itself can't be passed: as a global property it would also retarget the layer projects). -->
     <TargetFrameworks Condition="'$(SssklTargetFrameworks)' != ''">$(SssklTargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>SSSKL.Mobile</RootNamespace>
@@ -16,7 +16,7 @@
     <IsPackable>false</IsPackable>
 
     <!-- Release: Native AOT (fully trimmed, no JIT/interpreter fallback). Needs reflection-free code:
-         compiled bindings (x:DataType) and source-generated JSON (SSSKL.Mobile.Core ApiJsonContext).
+         compiled bindings (x:DataType) and source-generated JSON (SSSKL.Mobile.Infrastructure ApiJsonContext).
          Treat any IL2xxx/IL3xxx warning from `dotnet publish` as a bug.
          Android AOT is still experimental (XA1040): -p:SssklAndroidAot=false builds a Release without it. -->
     <PublishAot Condition="'$(Configuration)' == 'Release'">true</PublishAot>
@@ -93,6 +93,14 @@
     <MauiImage Include="Resources\Images\*" />
   </ItemGroup>
 
+  <!-- Associated domains (webcredentials:) for native passkey sign-in. Device builds only (an explicit device RID,
+       e.g. -r ios-arm64 or a deploy to a phone): entitlements make the SDK sign, and builds without a RID (the
+       Sonar scan's Debug build) or for the simulator (CI's unsigned one) have no certificate. Not named
+       Entitlements.plist: MAUI would pick that up for every build. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' and $(RuntimeIdentifier.StartsWith('ios-'))">
+    <CodesignEntitlements>Platforms\iOS\Device.entitlements</CodesignEntitlements>
+  </PropertyGroup>
+
   <!-- Apple's privacy manifest: required-reason APIs the .NET runtime uses and the data the app collects. -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
     <BundleResource Include="Platforms\iOS\PrivacyInfo.xcprivacy" LogicalName="PrivacyInfo.xcprivacy" />
@@ -108,9 +116,17 @@
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
     <PackageReference Include="Xamarin.AndroidX.WebKit" />
+    <!-- Passkey sign-in (Credential Manager); PlayServicesAuth provides passkeys before Android 14. -->
+    <PackageReference Include="Xamarin.AndroidX.Credentials" />
+    <PackageReference Include="Xamarin.AndroidX.Credentials.PlayServicesAuth" />
+    <!-- Version pins for PlayServicesAuth's dependencies (see Directory.Packages.props). -->
+    <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common.Java8" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SSSKL.Mobile.Core\SSSKL.Mobile.Core.csproj" />
+    <!-- The app is the composition root (onion: Domain ← Application ← Infrastructure / Presentation). -->
+    <ProjectReference Include="..\SSSKL.Mobile.Infrastructure\SSSKL.Mobile.Infrastructure.csproj" />
+    <ProjectReference Include="..\SSSKL.Mobile.Presentation\SSSKL.Mobile.Presentation.csproj" />
   </ItemGroup>
 </Project>

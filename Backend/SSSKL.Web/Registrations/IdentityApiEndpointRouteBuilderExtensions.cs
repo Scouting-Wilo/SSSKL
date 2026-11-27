@@ -528,15 +528,22 @@ public static class IdentityApiEndpointRouteBuilderExtensions
          }).RequireAuthorization();
 
          routeGroup.MapGet("/PasskeyRequestOptions", async Task<Results<ContentHttpResult, NotFound>>
-             ([FromQuery] string userName, [FromServices] IServiceProvider sp) =>
+             ([FromQuery] string? userName, [FromServices] IServiceProvider sp) =>
          {
              var signInManager = sp.GetRequiredService<SignInManager<ApplicationUser>>();
              var userManager = signInManager.UserManager;
              try
              {
-                 if (await userManager.FindByNameAsync(userName) is not { } user)
+                 // Without a user name the options allow any passkey of this site (discoverable credentials);
+                 // PasskeyAssertion then finds the user from the passkey's user handle. The mobile app uses this.
+                 ApplicationUser? user = null;
+                 if (!string.IsNullOrWhiteSpace(userName))
                  {
-                     return TypedResults.NotFound();
+                     user = await userManager.FindByNameAsync(userName);
+                     if (user is null)
+                     {
+                         return TypedResults.NotFound();
+                     }
                  }
 
                  var options = await signInManager.MakePasskeyRequestOptionsAsync(user);

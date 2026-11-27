@@ -1,5 +1,6 @@
 using System.ComponentModel;
-using SSSKL.Mobile.Core.ViewModels;
+using SSSKL.Mobile.Presentation.Localization;
+using SSSKL.Mobile.Presentation.ViewModels;
 
 namespace SSSKL.Mobile.Views;
 
@@ -42,7 +43,7 @@ public partial class PosPage : ContentPage
             return;
         }
         OrderPlacedBadge.Scale = 0.6;
-        SemanticScreenReader.Announce($"{Core.Localization.Texts.OrderPlaced} {_viewModel.OrderPlacedDetail}");
+        SemanticScreenReader.Announce($"{Presentation.Localization.Texts.OrderPlaced} {_viewModel.OrderPlacedDetail}");
         await Task.WhenAll(
             OrderPlacedPanel.FadeToAsync(1, 160, Easing.CubicOut),
             OrderPlacedBadge.ScaleToAsync(1, 320, Easing.SpringOut));

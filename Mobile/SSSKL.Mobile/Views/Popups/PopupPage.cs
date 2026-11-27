@@ -1,8 +1,8 @@
-using Microsoft.Maui.Controls.PlatformConfiguration;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 using Application = Microsoft.Maui.Controls.Application;
 using Microsoft.Maui.Controls.Shapes;
-using SSSKL.Mobile.Core.Localization;
+using SSSKL.Mobile.Presentation.Localization;
 
 namespace SSSKL.Mobile.Views.Popups;
 

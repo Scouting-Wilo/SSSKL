@@ -3,7 +3,7 @@ using CommunityToolkit.Maui.Behaviors;
 namespace SSSKL.Mobile.Controls;
 
 /// <summary>
-/// A Tabler icon (<see cref="Core.Localization.Icons"/>) in a colour, e.g. <c>Color="{AppThemeBinding ...}"</c>.
+/// A Tabler icon (<see cref="Presentation.Localization.Icons"/>) in a colour, e.g. <c>Color="{AppThemeBinding ...}"</c>.
 /// The SVGs are drawn black and tinted at runtime. The tint behavior is set from code, because toolkit
 /// behaviors don't inherit bindings. Decorative: hidden from screen readers (the row or button says it).
 /// </summary>

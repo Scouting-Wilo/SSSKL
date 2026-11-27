@@ -1,5 +1,5 @@
 using System.Windows.Input;
-using SSSKL.Mobile.Core.ViewModels;
+using SSSKL.Mobile.Presentation.ViewModels;
 
 namespace SSSKL.Mobile.Controls;
 

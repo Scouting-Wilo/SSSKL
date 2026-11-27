@@ -1,4 +1,5 @@
-import { Component, inject, signal, ChangeDetectionStrategy, viewChild } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, viewChild, afterNextRender, DestroyRef } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -13,6 +14,10 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { BrandingComponent } from '../../shared/components/branding/branding.component';
 import { TurnstileComponent } from '../../shared/components/turnstile/turnstile.component';
 import { TurnstileService, isTurnstileFailure } from '../../core/services/turnstile.service';
+import { EmbeddedService } from '../../core/services/embedded.service';
+
+/** Passkey autofill gives up after this many failed sign-ins in a row (e.g. offline), until the next attempt. */
+const MAX_AUTOFILL_FAILURES = 3;
 
 @Component({
   selector: 'app-login',
@@ -122,7 +127,7 @@ import { TurnstileService, isTurnstileFailure } from '../../core/services/turnst
               [label]="lang.t().passkey" 
               type="button"
               (onClick)="onPasskeyLogin()"
-              [disabled]="!loginForm.get('userName')?.value || isLoading()" 
+              [disabled]="isLoading()" 
               [loading]="isLoading()"
               styleClass="flex-1"
               severity="secondary">
@@ -190,6 +195,70 @@ export default class LoginComponent {
   protected readonly turnstile = inject(TurnstileService);
   protected readonly turnstileToken = signal<string | null>(null);
   private readonly turnstileWidget = viewChild(TurnstileComponent);
+  private readonly embedded = inject(EmbeddedService);
+
+  // Passkey autofill: a pending conditional passkey request, so the browser offers passkeys in the user name
+  // field's autofill. Only one passkey request can be pending, so it's stopped before every other login.
+  private autofill: { controller: AbortController; subscription: Subscription } | null = null;
+  private autofillFailures = 0;
+
+  constructor() {
+    // After the first render: the browser attaches the passkeys to the field with autocomplete="... webauthn".
+    afterNextRender(() => void this.startPasskeyAutofill());
+    inject(DestroyRef).onDestroy(() => this.stopPasskeyAutofill());
+  }
+
+  /** Starts passkey autofill, unless the browser can't, the mobile app has its own, or the 2FA step shows. */
+  async startPasskeyAutofill(): Promise<void> {
+    if (this.autofill || this.embedded.isEmbedded || this.requires2FA() || this.autofillFailures >= MAX_AUTOFILL_FAILURES) {
+      return;
+    }
+    if (!(await this.webAuthnService.isAutofillAvailable()) || this.autofill || this.requires2FA()) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const subscription = this.webAuthnService.loginWithAutofill(controller.signal).subscribe({
+      next: () => {
+        this.autofill = null;
+        this.navigateAfterLogin();
+      },
+      error: (err) => {
+        this.autofill = null;
+        if (err?.name === 'AbortError') {
+          return;
+        }
+        this.autofillFailures++;
+        if (err?.name !== 'NotAllowedError') {
+          this.errorMessage.set(this.lang.translate('error') + ': ' + (err?.message || 'Passkey failed'));
+        }
+        // A new request (with a fresh challenge), so autofill keeps working after a failed passkey.
+        void this.startPasskeyAutofill();
+      }
+    });
+    // A synchronous error has already cleared it; keep it only while still pending.
+    if (!subscription.closed) {
+      this.autofill = { controller, subscription };
+    }
+  }
+
+  stopPasskeyAutofill(): void {
+    if (!this.autofill) {
+      return;
+    }
+    const { controller, subscription } = this.autofill;
+    this.autofill = null;
+    subscription.unsubscribe();
+    controller.abort();
+  }
+
+  private navigateAfterLogin(): void {
+    let returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
+    if (returnUrl === '/') {
+      returnUrl = '/pos';
+    }
+    void this.router.navigateByUrl(returnUrl);
+  }
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
@@ -201,6 +270,7 @@ export default class LoginComponent {
       return;
     }
 
+    this.stopPasskeyAutofill();
     this.isLoading.set(true);
     this.errorMessage.set('');
 
@@ -216,11 +286,7 @@ export default class LoginComponent {
       next: () => {
         this.isLoading.set(false);
         this.turnstileWidget()?.reset();
-        let returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
-        if (returnUrl === '/') {
-          returnUrl = '/pos';
-        }
-        void this.router.navigateByUrl(returnUrl);
+        this.navigateAfterLogin();
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -228,6 +294,7 @@ export default class LoginComponent {
         this.turnstileWidget()?.reset();
         if (isTurnstileFailure(err)) {
           this.errorMessage.set(this.lang.t().turnstile_failed);
+          void this.startPasskeyAutofill();
           return;
         }
         if (err.status === 403) {
@@ -235,6 +302,7 @@ export default class LoginComponent {
           this.errorMessage.set(''); // Clear any previous error
           return;
         }
+        void this.startPasskeyAutofill();
 
         if (this.requires2FA()) {
           this.errorMessage.set(this.lang.t().invalid_tfa);
@@ -247,26 +315,27 @@ export default class LoginComponent {
   }
 
   onPasskeyLogin(): void {
-    const userName = this.loginForm.get('userName')?.value;
-    if (!userName) {
-      this.errorMessage.set(this.lang.t().enter_username_first);
-      return;
-    }
+    // The user name is optional: with one only that user's passkeys are offered, without one any passkey
+    // for this site (the API finds the user from it).
+    const userName = (this.loginForm.get('userName')?.value ?? '').trim() || undefined;
 
+    this.stopPasskeyAutofill();
+    this.autofillFailures = 0;
     this.isLoading.set(true);
     this.errorMessage.set('');
 
     this.webAuthnService.login(userName).subscribe({
       next: () => {
         this.isLoading.set(false);
-        let returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
-        if (returnUrl === '/') {
-          returnUrl = '/pos';
-        }
-        void this.router.navigateByUrl(returnUrl);
+        this.navigateAfterLogin();
       },
       error: (err) => {
         this.isLoading.set(false);
+        void this.startPasskeyAutofill();
+        // NotAllowedError: the user closed the browser's passkey dialog (or it timed out); nothing to report.
+        if (err?.name === 'NotAllowedError' || err?.name === 'AbortError') {
+          return;
+        }
         this.errorMessage.set(this.lang.translate('error') + ': ' + (err.message || 'Passkey failed'));
         console.error('Passkey login error', err);
       }

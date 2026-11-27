@@ -1,6 +1,7 @@
 using System.Text.Json;
-using SSSKL.Mobile.Core;
 using SSSKL.Mobile.Core.Auth;
+using SSSKL.Mobile.Domain.Auth;
+using SSSKL.Mobile.Infrastructure.Serialization;
 
 namespace SSSKL.Mobile.Services;
 

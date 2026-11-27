@@ -65,6 +65,7 @@ MSTest + FluentAssertions + NSubstitute + Bogus, one test project per layer:
 - **`SSSKL.Web.Test`**: controller tests that mock `ISender`, and integration tests (`Integration/`) that send real HTTP requests through `Integration/Infrastructure/SssklWebApplicationFactory` (IntegrationTest environment, one temp SQLite file per factory, fakes for email/web push/blob storage exposed as `Emails`/`Push`/`Blobs`; `WithSetting`/`WithServices` for overrides). Test classes derive from `IntegrationTestBase`, own one static factory (`[ClassInitialize]`/`[ClassCleanup]`) and use its helpers (`CreateAuthenticatedClientAsync(role)`, `SeedProductAsync`, `WithDbAsync`, `PollAsync`). Classes run in parallel (`MSTestSettings.cs`), so give each test its own users and data.
 - CI (`.github/workflows/dotnet.yml`) excludes Migrations, Controllers, `Program.cs` and `DependencyInjection.cs` from Sonar coverage.
 - CI only runs what a push or PR changes: each workflow (`dotnet.yml`, `frontend-ci.yml`, `mobile.yml`) first calls `changes.yml`, which outputs `backend`/`frontend`/`mobile` from path patterns, and its jobs skip otherwise (a skipped job still satisfies the required `Build & Test` check; trigger `paths:` filters would leave it pending). Backend changes also run the frontend's E2E suite. Release tags and manual runs build everything. Update the patterns in `changes.yml` when an area starts reading new files.
+- CodeQL (`.github/workflows/codeql.yml`, advanced setup, `security-and-quality` queries) scans C# (Backend and Mobile, `build-mode: none`, so no SixLabors license or MAUI workload), TypeScript and the workflows on every PR and master push and weekly. Keep CodeQL's default setup off in the repository settings.
 
 ## Frontend architecture (`Frontend/src/app/`)
 
@@ -73,6 +74,8 @@ MSTest + FluentAssertions + NSubstitute + Bogus, one test project per layer:
 - `layout/` (shell, header, sidebar) and `shared/` (components, directives, pipes, utils).
 - UI uses PrimeNG + Tailwind (`tailwindcss-primeui`). UI strings are Dutch, provided by `core/services/language.service.ts` (`translate(key)`); add new keys there.
 - PWA with service worker (`ngsw-config.json`) and web push notifications.
+- Passkey login (`features/auth/login.component.ts`, `services/webauthn.service.ts`) works without a user name (discoverable passkeys). The login page also keeps a conditional (`mediation: 'conditional'`) passkey request pending, so the browser offers passkeys in the user name field's autofill; only one passkey request can be pending, so it is aborted before the passkey button or a password login runs and restarted after they fail. Off in embedded mode.
+- The logged-out home page shows one store badge for the device (`shared/components/store-badge`: App Store on iOS/iPadOS, Google Play on Android, none on desktop or in the app); store IDs live in `core/config/app-stores.ts`. Safari's smart app banner is the `apple-itunes-app` meta tag in `src/index.html`.
 
 Follow `Frontend/AGENTS.md` for Angular code. Key rules: standalone components (don't set `standalone: true`), `ChangeDetectionStrategy.OnPush`, signals + `computed()` for state, `input()`/`output()` functions, `inject()` instead of constructor injection, native control flow (`@if`/`@for`), `class`/`style` bindings instead of `ngClass`/`ngStyle`, `host` object instead of `@HostBinding`/`@HostListener`, reactive forms, and WCAG AA / AXE compliance.
 
@@ -83,14 +86,27 @@ Follow `Frontend/AGENTS.md` for Angular code. Key rules: standalone components (
 It is not in `SSSKL.slnx` (backend CI, its Sonar project and the App Service deploy don't build it) and has its own solution `Mobile/SSSKL.Mobile.slnx`, CI (`mobile.yml`) and SonarCloud project. Build the MAUI app explicitly with `-f net11.0-android|net11.0-ios`.
 
 **Projects**
-- **`SSSKL.Mobile.Core`** (net11.0, no MAUI): the API client (`Api/SssklApiClient`, client-side DTO copies in `Models/`), auth, popup coordinators, view models (CommunityToolkit.Mvvm), Dutch strings (`Localization/Texts`) and the WebView rules (`Web/`).
+Onion architecture like the backend; project references only point inwards, so the compiler enforces the layering:
+
+```
+SSSKL.Mobile.Domain ← SSSKL.Mobile.Core ← SSSKL.Mobile.Infrastructure ─┐
+                              ↑                                            ├─ SSSKL.Mobile (MAUI, composition root)
+                              └──────────── SSSKL.Mobile.Presentation ─────┘
+```
+
+- **`SSSKL.Mobile.Domain`** (net11.0, no dependencies): client-side copies of the API DTOs (`Models/`; SSSKL.Contracts isn't referenced, it pulls in Identity and MediatR), the token pair (`Auth/TokenSet`) and pure logic (`Chooser/FingerChooser`).
+- **`SSSKL.Mobile.Core`** (the application layer; not named "Application", which would hide MAUI's `Application` class in the `SSSKL.Mobile` namespace): ports implemented by Infrastructure or the MAUI app (`Api/ISssklApi` + `ApiException`, `Auth/ITokenStore`/`ITokenRefresher`/`IPasskeyApi`/`IPasskeyAuthenticator`, `Services/Abstractions`: `IAppNavigator`, `IUserDialogs`, `IHaptics`, `ISettingsStore`, ...), `Configuration/AppEndpoints`, `Navigation/NativeRoutes`, popup coordinators (`Popups/`), `CurrentUserService`, `ThemePreference` and:
   - **`Auth/AuthSession`** holds the bearer tokens and refreshes them, one refresh at a time. Sign-in and sign-out bump a session generation; a refresh that finishes after the session changed is discarded (no store write, no `TokensChanged`).
+  - **`Auth/PasskeySignIn`**: native passkey sign-in (see Login).
+- **`SSSKL.Mobile.Infrastructure`**: the API adapters: `Api/SssklApiClient`, `Auth/IdentityTokenRefresher`, `Auth/PasskeyApi`, `Auth/PasskeyJson` (WebAuthn JSON for the iOS passkey API), the wire-only DTOs and `Serialization/ApiJsonContext`.
   - **`Auth/AuthTokenHandler`** adds the bearer header and retries once after a refresh on a 401.
-- **`SSSKL.Mobile`** (net11.0-android/net11.0-ios): XAML pages, Shell and the platform code (`Platforms/*/WebViewPlatform.*.cs`).
-- **`SSSKL.Mobile.Test`**: MSTest tests for Core.
+- **`SSSKL.Mobile.Presentation`** (no MAUI, never references Infrastructure): view models (CommunityToolkit.Mvvm), Dutch strings and icon names (`Localization/Texts`, `Icons`), the "Meer" menu (`Navigation/MoreMenu`), the tab badge state (`Services/NotificationInbox`) and the WebView rules (`Web/`, with its own `WebJsonContext`).
+- Each layer registers itself in its `DependencyInjection.cs` (`AddCore`, `AddInfrastructure`, `AddPresentation`); `MauiProgram` calls them and adds the platform adapters for the ports and the pages.
+- **`SSSKL.Mobile`** (net11.0-android/net11.0-ios): XAML pages, Shell and the platform code (`Platforms/*/WebViewPlatform.*.cs`): the composition root.
+- **`SSSKL.Mobile.Test`**: MSTest tests for the four layer projects, in a folder per layer (`Domain/`, `Core/`, `Infrastructure/`, `Presentation/`).
 
 **Native vs. web**
-- Native screens: the welcome page (signed out), the tabs Kassa (POS), Notificaties (tab badge = unread count, `Services/NotificationInbox`) and Profiel, and pushed pages: settings, Mijn bestellingen, Mijn saldo, Saldolijst, Leaderboard, Statistieken, Achievements (+ detail), other members' profiles (`users/{id}`, the app's own route), Over SSSKL, Evenementen (+ detail: RSVP, image, delete) and Quotes (+ detail: vote, delete), both with comments (`Controls/CommentsView`), and Vingeren (`chooser`, app only, like Chwazi: everyone puts a finger down and it picks winners or teams; logic in Core's `Chooser/FingerChooser`, fingers from `Controls/MultiTouchView`, a `GraphicsView` with per-platform multi-touch in `Platforms/*/MultiTouchPlatform.*.cs`); plus the achievement and "what's new" popups.
+- Native screens: the welcome page (signed out), the tabs Kassa (POS), Notificaties (tab badge = unread count, `Services/NotificationInbox`) and Profiel, and pushed pages: settings, Mijn bestellingen, Mijn saldo, Saldolijst, Leaderboard, Statistieken, Achievements (+ detail), other members' profiles (`users/{id}`, the app's own route), Over SSSKL, Evenementen (+ detail: RSVP, image, delete) and Quotes (+ detail: vote, delete), both with comments (`Controls/CommentsView`), and Vingeren (`chooser`, app only, like Chwazi: everyone puts a finger down and it picks winners or teams; logic in Domain's `Chooser/FingerChooser`, fingers from `Controls/MultiTouchView`, a `GraphicsView` with per-platform multi-touch in `Platforms/*/MultiTouchPlatform.*.cs`); plus the achievement and "what's new" popups.
 - The "Meer" tab lists the features without a tab; the login sheet, admin pages and the create/edit forms of events (`events/new`, `events/{id}/edit`) and quotes (`quotes?new`, `quotes?edit=<id>`) show the SPA in a WebView.
 - `Navigation/NativeRoutes` decides which SPA routes open natively (menu entries, notification `LinkUri`s, `?userId=` for stats/achievements); `IAppNavigator.OpenAsync(path)` goes through it, pushes the page on the current tab (`Views/INativePage.Prepare` gets the route) and falls back to the WebView.
 - Tapping the open tab again pops it to its root page (`Controls/TabReselect`, hooked in by the platform `SssklShellRenderer`s); switching tabs keeps each tab's stack.
@@ -99,14 +115,15 @@ It is not in `SSSKL.slnx` (backend CI, its Sonar project and the App Service dep
 - Remote images fade in with `Controls/FadeImage`. The selected tab shows a filled icon (`tab_*_selected.svg`), swapped in `AppShell.UpdateTabIcons`. On iOS only the tab roots use large titles (`ios:Page.LargeTitleDisplay`; the implicit page style sets Never).
 - Font sizes come from the type scale in `Resources/Styles/Styles.xaml` (`FontSize*` resources; `Controls/TypeScale` in code), not literal numbers. Haptics go through Core's `IHaptics`.
 - Bind commands of toolkit behaviors (`TouchBehavior`) from code, or use `Controls/Pressable`: behaviors don't inherit the page's `BindingContext`.
-- Icons are Tabler Icons (MIT) SVGs in `SSSKL.Mobile/Resources/Images` (`ti_*.svg`, tab bar `tab_*.svg`), listed in `Core/Localization/Icons` and shown with `Controls/IconView` (tinted at runtime). Copy new ones from the `@tabler/icons` npm package's `icons/outline/` with `stroke` set to `#000000` and the full MIT notice in a comment at the top; a test checks every icon file for it.
+- Icons are Tabler Icons (MIT) SVGs in `SSSKL.Mobile/Resources/Images` (`ti_*.svg`, tab bar `tab_*.svg`), listed in `Presentation/Localization/Icons` and shown with `Controls/IconView` (tinted at runtime). Copy new ones from the `@tabler/icons` npm package's `icons/outline/` with `stroke` set to `#000000` and the full MIT notice in a comment at the top; a test checks every icon file for it.
 
 **Login**
-- Signed out (also after sign-out, session expiry and the SPA's `ssskl-app://logout`), the window root is the native `Views/WelcomePage` (logo, version, "Inloggen"). It sits on the splash's brand colour (`Brand`) in both colour modes; `Services/BrandSystemBars` gives the system bars light icons while it shows.
+- Signed out (also after sign-out, session expiry and the SPA's `ssskl-app://logout`), the window root is the native `Views/WelcomePage` (logo, version, "Inloggen met passkey", "Inloggen"). It sits on the splash's brand colour (`Brand`) in both colour modes; `Services/BrandSystemBars` gives the system bars light icons while it shows.
 - "Inloggen" opens `Views/LoginPage` as a modal sheet (page sheet on iOS, swipe-down closes it; close button and Android back close it too). A new `LoginPage` is resolved per tap.
 - The sheet uses the SPA's own `/login` page, so Turnstile, 2FA and passkeys keep working. When it has the tokens it dismisses itself and `AppNavigator.CompleteSignInAsync` switches the root to the `AppShell`.
 - After login the app reads `access_token`/`refresh_token` from the WebView's storage and keeps them in SecureStorage.
 - The app then injects them into every SPA page with a document-start script (`Web/WebSessionScript`). That script also sets `window.SSSKL_APP`.
+- "Inloggen met passkey" signs in natively through the API, without the WebView: Core's `Auth/PasskeySignIn` gets (through Infrastructure's `PasskeyApi`) `GET identity/PasskeyRequestOptions` without a user name (any discoverable passkey), shows the system passkey sheet (`Services/PasskeyAuthenticator`: AuthenticationServices on iOS 16+, AndroidX Credential Manager on Android 9+) and posts the assertion to `identity/PasskeyAssertion` for bearer tokens. Both calls share a fresh cookie container (the API keeps the challenge in a cookie). The API accepts the app's WebAuthn origins via `PasskeyOriginPolicy` (`https://<WEBSITE_DOMAIN>` plus `Passkeys:AllowedOrigins`, the Android `android:apk-key-hash:` of each signing key in `assetlinks.json`). The site vouches for the app in `Frontend/public/.well-known/` (`assetlinks.json` with `get_login_creds`, `apple-app-site-association` with `webcredentials`); iOS device builds carry `webcredentials:ssskl.scoutingwilo.nl` (`Platforms/iOS/Device.entitlements`, not on simulator builds).
 
 **SPA embedded mode** (`core/services/embedded.service.ts`)
 - Detected by `window.SSSKL_APP` or the `SSSKLApp/` user-agent token.
@@ -135,13 +152,13 @@ Release builds default to `https://ssskl.scoutingwilo.nl`.
 - On iOS it only applies to device publishes (`-r ios-arm64`), not simulator builds. On Android the SDK still marks it experimental (warning XA1040).
 - Keep the code reflection-free:
   - compiled bindings with `x:DataType`
-  - JSON only through the source-generated `ApiJsonContext` in Core; add new DTO types there
-- `SSSKL.Mobile.Core` has `IsAotCompatible` set, so the analyzers flag reflection use.
-- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml`: Core tests, a Release Android build, an unsigned iOS simulator build, and the SonarCloud analysis (`scouting-wilo_SSSKL_Mobile`, on the `xcode-27` runner because only macOS builds both platforms; coverage counts Core only, via `Mobile/coverage.runsettings`).
+  - JSON only through source-generated contexts: `ApiJsonContext` in Infrastructure (add new DTO types there) and Presentation's `WebJsonContext`
+- The layer projects have `IsAotCompatible` set, so the analyzers flag reflection use.
+- The only expected trim warning is IL2104 from CommunityToolkit.Maui. CI is `.github/workflows/mobile.yml`: the layer tests, a Release Android build, an unsigned iOS simulator build, and the SonarCloud analysis (`scouting-wilo_SSSKL_Mobile`, on the `xcode-27` runner because only macOS builds both platforms; coverage counts Core only, via `Mobile/coverage.runsettings`).
 
 **Store releases**
 - `.github/workflows/mobile-release.yml` runs on the same `vX.Y.Z` tag as the API. It builds and signs each app once, then moves that build through approval-gated environments: TestFlight → App Store and Play internal testing → production. Pre-release tags stop after testing.
-- After Play internal testing, `android-github` attaches the signed universal `.apk` to the tag's GitHub release (`SSSKL-X.Y.Z.apk`, a pre-release for pre-release tags) for Obtainium.
+- Only after the Play production deployment is approved and succeeds, `android-github` attaches the signed universal `.apk` to the tag's GitHub release (`SSSKL-X.Y.Z.apk`) for Obtainium. Pre-release tags and a rejected production deployment publish no `.apk`.
 - The uploads use fastlane (`Mobile/Gemfile`, `Mobile/fastlane/Fastfile`).
 - The display version is the tag's numbers (`ApplicationDisplayVersion` = `_SssklNumericVersion`). The build number is run number + 1000 (`-p:ApplicationVersion`).
 - iOS jobs run on the `xcode-27` runner image with Xcode 27.2; it has no .NET 11, so `setup-dotnet` installs it.

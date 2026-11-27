@@ -72,7 +72,8 @@ builder.Services.AddOpenApi(opt =>
     });
 });
 
-builder.Services.AddAuthenticationRegistrations(cookieSecurePolicy, websiteDomain);
+builder.Services.AddAuthenticationRegistrations(
+    cookieSecurePolicy, websiteDomain, builder.Configuration.GetSection("Passkeys:AllowedOrigins").Get<string[]>());
 builder.Services.AddAntiforgeryRegistrations(cookieSecurePolicy);
 builder.Services.AddCorsRegistrations(websiteDomain);
 

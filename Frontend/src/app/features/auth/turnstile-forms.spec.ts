@@ -144,10 +144,34 @@ describe('Turnstile on auth forms', () => {
       expect(navigate).toHaveBeenCalledWith('/pos');
     });
 
-    it('asks for a user name before a passkey login', () => {
-      component.loginForm.patchValue({ userName: '' });
+    it('starts a passkey login without a user name', () => {
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const login = vi.spyOn(TestBed.inject(WebAuthnService), 'login').mockReturnValue(of({}));
+      component.loginForm.patchValue({ userName: '  ' });
+
       component.onPasskeyLogin();
-      expect(component.errorMessage()).toBe(component.lang.t().enter_username_first);
+
+      expect(login).toHaveBeenCalledWith(undefined);
+      expect(component.errorMessage()).toBe('');
+    });
+
+    it('passes a filled-in user name to the passkey login', () => {
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const login = vi.spyOn(TestBed.inject(WebAuthnService), 'login').mockReturnValue(of({}));
+
+      component.onPasskeyLogin();
+
+      expect(login).toHaveBeenCalledWith('kim');
+    });
+
+    it('stays quiet when the passkey dialog is closed', () => {
+      const cancelled = Object.assign(new Error('The operation either timed out or was not allowed.'), { name: 'NotAllowedError' });
+      vi.spyOn(TestBed.inject(WebAuthnService), 'login').mockReturnValue(throwError(() => cancelled));
+
+      component.onPasskeyLogin();
+
+      expect(component.isLoading()).toBe(false);
+      expect(component.errorMessage()).toBe('');
     });
 
     it('navigates after a passkey login', () => {

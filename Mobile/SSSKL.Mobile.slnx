@@ -5,7 +5,16 @@
     <BuildType Name="DebugProduction" />
   </Configurations>
   <Folder Name="/src/">
+    <Project Path="SSSKL.Mobile.Domain/SSSKL.Mobile.Domain.csproj">
+      <BuildType Solution="DebugProduction|*" Project="Debug" />
+    </Project>
     <Project Path="SSSKL.Mobile.Core/SSSKL.Mobile.Core.csproj">
+      <BuildType Solution="DebugProduction|*" Project="Debug" />
+    </Project>
+    <Project Path="SSSKL.Mobile.Infrastructure/SSSKL.Mobile.Infrastructure.csproj">
+      <BuildType Solution="DebugProduction|*" Project="Debug" />
+    </Project>
+    <Project Path="SSSKL.Mobile.Presentation/SSSKL.Mobile.Presentation.csproj">
       <BuildType Solution="DebugProduction|*" Project="Debug" />
     </Project>
     <Project Path="SSSKL.Mobile/SSSKL.Mobile.csproj" />
