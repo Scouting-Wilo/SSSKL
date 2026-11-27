@@ -59,12 +59,14 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Decode and save SixLabors license
+      env:
+        SIXLABORS_LICENSE: ${{ secrets.SixLaborsLicense }}
       run: |
-        if [ -z "${{ secrets.SixLaborsLicense }}" ]; then
+        if [ -z "$SIXLABORS_LICENSE" ]; then
           echo "SixLaborsLicense secret is missing or empty"
           exit 1
         fi
-        echo "${{ secrets.SixLaborsLicense }}" | base64 -d > ./sixlabors.lic
+        printf '%s' "$SIXLABORS_LICENSE" | base64 -d > ./sixlabors.lic
         cp ./sixlabors.lic ../sixlabors.lic
 
     - name: Restore dependencies
@@ -104,12 +106,14 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Decode and save SixLabors license
+        env:
+          SIXLABORS_LICENSE: ${{ secrets.SixLaborsLicense }}
         run: |
-          if [ -z "${{ secrets.SixLaborsLicense }}" ]; then
+          if [ -z "$SIXLABORS_LICENSE" ]; then
             echo "SixLaborsLicense secret is missing or empty"
             exit 1
           fi
-          echo "${{ secrets.SixLaborsLicense }}" | base64 -d > ./sixlabors.lic
+          printf '%s' "$SIXLABORS_LICENSE" | base64 -d > ./sixlabors.lic
           cp ./sixlabors.lic ../sixlabors.lic
 
       - name: Cache SonarCloud packages
