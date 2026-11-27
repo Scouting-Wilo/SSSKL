@@ -115,7 +115,7 @@ jobs:
   scan:
     name: SonarCloud Analyze (mobile)
     needs: changes
-    # Dependabot and fork PRs get no SONAR_TOKEN; the build jobs still verify them.
+    # Dependabot and fork PRs get no OIDC token for SonarCloud; the build jobs still verify them.
     if: >-
       needs.changes.outputs.mobile == 'true' &&
       github.event.pull_request.user.login != 'dependabot[bot]' &&
@@ -123,6 +123,9 @@ jobs:
     # macOS, because only it can build both platforms: the analysis needs the Android and the iOS compilation.
     runs-on: xcode-27
     timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write # secretless SonarCloud analysis: the auth steps trade the job's OIDC token for a SonarCloud token
     defaults:
       run:
         # The analysis' base directory: keeps the Backend and Frontend files out of this project.
@@ -181,11 +184,13 @@ jobs:
     - name: Install SonarCloud scanner
       run: dotnet tool install --global dotnet-sonarscanner
 
-    - name: Build and analyze
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        JAVA17: ${{ steps.java17.outputs.path }}
+    - name: Authenticate to SonarCloud
+      # Exports a 30-minute token, scoped to this project, as SONAR_TOKEN for the next steps.
+      uses: SonarSource/sonarqube-auth-action@b372e2c2930aadfcc4f4399446da1e12772709ad # v1.2
+      with:
+        project-key: scouting-wilo_SSSKL_Mobile
+
+    - name: Begin analysis
       # Coverage only counts the layer projects (not their DI wiring, like the backend): the MAUI app (pages,
       # controls, platform code) has no unit tests, and would otherwise fail the new-code coverage condition on
       # every UI change. It is still analyzed for issues.
@@ -200,10 +205,23 @@ jobs:
           /d:sonar.coverage.exclusions="SSSKL.Mobile/**,**/DependencyInjection.cs" \
           /d:sonar.scanner.skipJreProvisioning=true
 
+    - name: Build and test
+      env:
+        JAVA17: ${{ steps.java17.outputs.path }}
+      run: |
         dotnet build SSSKL.Mobile.slnx -c Debug \
           -p:AndroidSdkDirectory="$ANDROID_SDK_DIR" -p:JavaSdkDirectory="$JAVA17"
 
         dotnet test SSSKL.Mobile.Test --no-build -c Debug --results-directory TestResults \
           --settings coverage.runsettings
 
-        dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+    - name: Re-authenticate to SonarCloud
+      # The build can outlast the first token, so the upload gets a fresh one.
+      uses: SonarSource/sonarqube-auth-action@b372e2c2930aadfcc4f4399446da1e12772709ad # v1.2
+      with:
+        project-key: scouting-wilo_SSSKL_Mobile
+
+    - name: End analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
