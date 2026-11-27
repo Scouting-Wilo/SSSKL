@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Onion core of the mobile app: the API's models, the token pair and pure logic (FingerChooser). No dependencies. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- The app ships with Native AOT: enables the trim/AOT/single-file analyzers here. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SSSKL.Mobile.Test" />
+  </ItemGroup>
+</Project>

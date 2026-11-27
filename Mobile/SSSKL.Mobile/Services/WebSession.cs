@@ -2,7 +2,8 @@ using Microsoft.Extensions.Logging;
 using SSSKL.Mobile.Core.Auth;
 using SSSKL.Mobile.Core.Configuration;
 using SSSKL.Mobile.Core.Services;
-using SSSKL.Mobile.Core.Web;
+using SSSKL.Mobile.Domain.Auth;
+using SSSKL.Mobile.Presentation.Web;
 
 namespace SSSKL.Mobile.Services;
 

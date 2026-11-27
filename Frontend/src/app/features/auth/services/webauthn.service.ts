@@ -86,9 +86,40 @@ export class WebAuthnService {
   }
 
   /**
-   * Initiates the Passkey login flow.
+   * Initiates the Passkey login flow. Without a user name the browser offers every passkey it has for this
+   * site and the API finds the user from the chosen one.
    */
-  public login(userName: string): Observable<any> {
+  public login(userName?: string): Observable<any> {
+    return this.authenticate(userName);
+  }
+
+  /**
+   * Whether the browser can offer passkeys in the autofill of an `autocomplete="... webauthn"` field
+   * ("conditional mediation").
+   */
+  public async isAutofillAvailable(): Promise<boolean> {
+    const credential = (globalThis as { PublicKeyCredential?: { isConditionalMediationAvailable?: () => Promise<boolean> } })
+      .PublicKeyCredential;
+    if (typeof credential?.isConditionalMediationAvailable !== 'function') {
+      return false;
+    }
+    try {
+      return await credential.isConditionalMediationAvailable();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Passkey autofill: waits (without a dialog) until the user picks a passkey from the autofill of the
+   * user name field, then signs in with it. Only one passkey request can be pending, so abort it via `signal`
+   * before starting another login.
+   */
+  public loginWithAutofill(signal: AbortSignal): Observable<any> {
+    return this.authenticate(undefined, signal);
+  }
+
+  private authenticate(userName?: string, signal?: AbortSignal): Observable<any> {
     return this.authService.getPasskeyRequestOptions(userName).pipe(
       switchMap((options: any) => {
         // Handle both wrapped (FIDO2-Net-Lib) and unwrapped (.NET 10 Identity) options
@@ -103,7 +134,11 @@ export class WebAuthnService {
           }))
         };
 
-        return from(navigator.credentials.get({ publicKey: credentialOptions })).pipe(
+        const request: CredentialRequestOptions = signal
+          ? { publicKey: credentialOptions, mediation: 'conditional', signal }
+          : { publicKey: credentialOptions };
+
+        return from(navigator.credentials.get(request)).pipe(
           switchMap((credential: any) => {
             if (!credential) {
               return throwError(() => new Error('Passkey login cancelled or failed.'));
@@ -125,7 +160,9 @@ export class WebAuthnService {
             return this.authService.loginWithPasskey(assertionData);
           }),
           catchError(err => {
-            console.error('Passkey assertion error:', err);
+            if (err?.name !== 'AbortError') {
+              console.error('Passkey assertion error:', err);
+            }
             return throwError(() => err);
           })
         );

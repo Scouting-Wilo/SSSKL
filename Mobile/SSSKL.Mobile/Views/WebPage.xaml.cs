@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using SSSKL.Mobile.Core.Configuration;
 using SSSKL.Mobile.Core.Services;
-using SSSKL.Mobile.Core.Web;
+using SSSKL.Mobile.Presentation.Web;
 using SSSKL.Mobile.Services;
 
 namespace SSSKL.Mobile.Views;

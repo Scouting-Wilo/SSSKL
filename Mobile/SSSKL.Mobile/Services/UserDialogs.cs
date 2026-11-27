@@ -1,7 +1,7 @@
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
-using SSSKL.Mobile.Core.Localization;
 using SSSKL.Mobile.Core.Services;
+using SSSKL.Mobile.Presentation.Localization;
 
 namespace SSSKL.Mobile.Services;
 

@@ -42,6 +42,29 @@ public class IdentityIntegrationTests : IntegrationTestBase
     }
 
     [TestMethod]
+    public async Task PasskeyRequestOptions_WithoutUserName_AllowsAnyPasskey()
+    {
+        // The mobile app signs in with a discoverable passkey: no user name, so no allowCredentials list.
+        var response = await AnonymousClient().GetAsync("/api/v1/identity/PasskeyRequestOptions", CT);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await ReadJsonAsync<JsonElement>(response);
+        body.GetProperty("challenge").GetString().Should().NotBeNullOrEmpty();
+        if (body.TryGetProperty("allowCredentials", out var allowed) && allowed.ValueKind == JsonValueKind.Array)
+        {
+            allowed.GetArrayLength().Should().Be(0);
+        }
+    }
+
+    [TestMethod]
+    public async Task PasskeyRequestOptions_UnknownUserName_Returns404()
+    {
+        var response = await AnonymousClient().GetAsync($"/api/v1/identity/PasskeyRequestOptions?userName=nobody-{Guid.NewGuid():N}", CT);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [TestMethod]
     public async Task Login_WrongPassword_Returns401()
     {
         var user = await CreateUserAsync(Roles.User);

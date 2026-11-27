@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging;
 using SSSKL.Mobile.Core.Api;
 using SSSKL.Mobile.Core.Auth;
-using SSSKL.Mobile.Core.Localization;
 using SSSKL.Mobile.Core.Navigation;
 using SSSKL.Mobile.Core.Popups;
 using SSSKL.Mobile.Core.Services;
+using SSSKL.Mobile.Domain.Auth;
+using SSSKL.Mobile.Presentation.Localization;
+using SSSKL.Mobile.Presentation.Services;
 using SSSKL.Mobile.Views;
 
 namespace SSSKL.Mobile.Services;

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- View models (CommunityToolkit.Mvvm), Dutch texts and icons, the menu and the WebView rules. Uses Core's ports only, never Infrastructure; no MAUI, so it is unit tested on plain net11.0. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- The app ships with Native AOT: enables the trim/AOT/single-file analyzers here. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SSSKL.Mobile.Core\SSSKL.Mobile.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SSSKL.Mobile.Test" />
+  </ItemGroup>
+</Project>

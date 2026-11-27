@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using SSSKL.Mobile.Domain.Auth;
 
 namespace SSSKL.Mobile.Core.Auth;
 

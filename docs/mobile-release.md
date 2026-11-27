@@ -8,13 +8,13 @@ How the MAUI app (`Mobile/`) gets to TestFlight, the App Store and Google Play. 
 
 ```
 build-android ──► android-internal (approve) ──► android-production (approve, stable tags only)
-                                             └─► android-github (signed .apk on the GitHub release, for Obtainium)
+                                                                 └─► android-github (signed .apk on the GitHub release, for Obtainium)
 build-ios     ──► ios-testflight   (approve) ──► ios-app-store      (approve, stable tags only)
 ```
 
 1. **Build** (no approval): each app is tested (Core), built, signed and stored as a workflow artifact (`android-aab`, `ios-ipa`). Symbols go to Sentry (`ssskl-mobile`) and to the stores: the `.ipa` carries a `Symbols/` folder for App Store Connect (the build fails without it), and the Android job zips the unstripped Native AOT library (`native-debug-symbols.zip`, uploaded with the bundle as native debug symbols); the R8 mapping for Java frames is already inside the `.aab`.
-2. **Testing** (approve in the run): the `.aab` goes to the Play **internal testing** track; the `.ipa` goes to **TestFlight** for internal testers. Right after internal testing, `android-github` attaches the signed universal `.apk` to the tag's GitHub release as `SSSKL-<version>.apk` (see [Obtainium](#obtainium)).
-3. **Production** (approve after testing): the same build is promoted from internal testing to **production** (Google reviews it), and attached to a new App Store version that is **submitted for App Review**. After Apple approves it, press *Release* in App Store Connect.
+2. **Testing** (approve in the run): the `.aab` goes to the Play **internal testing** track; the `.ipa` goes to **TestFlight** for internal testers.
+3. **Production** (approve after testing): the same build is promoted from internal testing to **production** (Google reviews it), and attached to a new App Store version that is **submitted for App Review**. After Apple approves it, press *Release* in App Store Connect. Only once the Play production deployment was approved and succeeded does `android-github` attach the signed universal `.apk` to the tag's GitHub release as `SSSKL-<version>.apk` (see [Obtainium](#obtainium)); rejecting it publishes no `.apk` either.
 
 A pre-release tag (`v1.5.0-rc.1`) stops after step 2. If a release needs no new app, reject its pending approvals; a pending approval expires after 30 days.
 
@@ -27,11 +27,13 @@ A pre-release tag (`v1.5.0-rc.1`) stops after step 2. If a release needs no new 
 ### Apple
 1. Enrol **Scouting Wilo** in the Apple Developer Program as an organisation (needs a D-U-N-S number; €99/year).
 2. Certificates, Identifiers & Profiles:
-   - Register the App ID `nl.scoutingwilo.ssskl` (no extra capabilities).
-   - Create an **App Store** provisioning profile for it. CI downloads it, so it never goes in a secret.
+   - Register the App ID `nl.scoutingwilo.ssskl` with the **Associated Domains** capability (passkey sign-in: the app's `webcredentials:ssskl.scoutingwilo.nl` entitlement, `Platforms/iOS/Device.entitlements`).
+   - Create an **App Store** provisioning profile for it (regenerate it after adding a capability). CI downloads it, so it never goes in a secret.
+   - Put the Team ID (Membership details) in `Frontend/public/.well-known/apple-app-site-association` (`<TeamID>.nl.scoutingwilo.ssskl`), so iOS lets the app use the site's passkeys.
    - Create an **Apple Distribution** certificate and export it from Keychain Access as a `.p12` with a password.
 3. App Store Connect → Users and Access → Integrations: create an **API key** with role *App Manager* and download the `.p8`. Note its Key ID and the Issuer ID.
 4. App Store Connect → Apps → **New app**: name SSSKL, bundle ID `nl.scoutingwilo.ssskl`, primary language Dutch.
+   Once the app is live, put its Apple ID (App Information) in `APP_STORE_ID` (`Frontend/src/app/core/config/app-stores.ts`, shows the App Store badge on the logged-out home page) and uncomment the `apple-itunes-app` meta tag in `Frontend/src/index.html` with the same ID (Safari's smart app banner).
 5. Fill in the App Store listing:
    - App Privacy: match `Mobile/SSSKL.Mobile/Platforms/iOS/PrivacyInfo.xcprivacy`.
    - Age rating, privacy policy URL and support URL.
@@ -68,7 +70,7 @@ Optional repository variable: `ANDROID_PRODUCTION_ROLLOUT`, for example `0.2` fo
 
 ## Obtainium
 
-[Obtainium](https://github.com/ImranR98/Obtainium) installs and updates Android apps straight from their GitHub releases. Every release tag gets the signed universal `.apk` (arm64 and x86_64) built for Google Play, attached to the GitHub release `vX.Y.Z` as `SSSKL-X.Y.Z.apk`. If you haven't created the release by hand yet, the job creates it with generated notes. Pre-release tags get a GitHub pre-release, which Obtainium skips unless *Include prereleases* is on.
+[Obtainium](https://github.com/ImranR98/Obtainium) installs and updates Android apps straight from their GitHub releases. Every stable release tag gets the signed universal `.apk` (arm64 and x86_64) built for Google Play, attached to the GitHub release `vX.Y.Z` as `SSSKL-X.Y.Z.apk`, after the Google Play production deployment was approved and succeeded. Obtainium users therefore get the same build as Play users, and never a build that only reached internal testing. If you haven't created the release by hand yet, the job creates it with generated notes. Pre-release tags publish no `.apk`, because they never reach production.
 
 Users add the app with this link (opens Obtainium, or its web page if Obtainium isn't installed):
 <https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/Scouting-Wilo/SSSKL>

@@ -1,6 +1,6 @@
 using Microsoft.Maui.Controls.Shapes;
-using SSSKL.Mobile.Core.Localization;
-using SSSKL.Mobile.Core.ViewModels;
+using SSSKL.Mobile.Presentation.Localization;
+using SSSKL.Mobile.Presentation.ViewModels;
 
 namespace SSSKL.Mobile.Views.Popups;
 

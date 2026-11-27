@@ -2,11 +2,12 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { BrandingComponent } from '../../shared/components/branding/branding.component';
 import { NgOptimizedImage } from '@angular/common';
+import { StoreBadgeComponent } from '../../shared/components/store-badge/store-badge.component';
 
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [CardModule, BrandingComponent, NgOptimizedImage],
+  imports: [CardModule, BrandingComponent, NgOptimizedImage, StoreBadgeComponent],
   template: `
     <div class="flex justify-center items-center h-full sm:mt-10">
       <p-card class="max-w-2xl w-full bg-surface-50 border border-surface-200 dark:bg-surface-900 dark:border-surface-800">
@@ -19,7 +20,7 @@ import { NgOptimizedImage } from '@angular/common';
             priority
             class="rounded-xl shadow-lg"
           />
-          <div class="flex flex-col items-center justify-center text-center h-36">
+          <div class="flex flex-col items-center justify-center text-center min-h-36">
             <app-branding class="scale-150 origin-center mb-4" />
             <p class="m-0 text-muted-color">
               Made with ❤️ by
@@ -31,6 +32,9 @@ import { NgOptimizedImage } from '@angular/common';
               >
             </p>
             
+            <!-- The App Store or Google Play badge, whichever fits the device (none on desktop) -->
+            <app-store-badge class="block mt-6 empty:hidden" />
+
             <div class="mt-8">
               <a 
                 href="https://github.com/Scouting-Wilo/SSSKL" 
