@@ -42,6 +42,9 @@ jobs:
       startsWith(github.head_ref, 'dependabot/docker/') ||
       startsWith(github.head_ref, 'dependabot/github_actions/'))
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # secretless SonarCloud analysis: the auth step trades the job's OIDC token for a SonarCloud token
 
     defaults:
       run:
@@ -69,12 +72,18 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Authenticate to SonarCloud
+      # Exports a 30-minute token, scoped to this project, as SONAR_TOKEN for the scan.
+      # Dependabot PRs get no OIDC token for SonarCloud. Tags are the master commit, already analyzed.
+      if: github.event.pull_request.user.login != 'dependabot[bot]' && !startsWith(github.ref, 'refs/tags/')
+      uses: SonarSource/sonarqube-auth-action@b372e2c2930aadfcc4f4399446da1e12772709ad # v1.2
+      with:
+        project-key: scouting-wilo_SSSKL_Frontend
+
     - name: SonarQube Scan
-      # Dependabot PRs get no SONAR_TOKEN. Tags are the master commit, already analyzed.
       if: github.event.pull_request.user.login != 'dependabot[bot]' && !startsWith(github.ref, 'refs/tags/')
       uses: sonarsource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
       env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         projectBaseDir: Frontend

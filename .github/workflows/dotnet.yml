@@ -79,10 +79,13 @@ jobs:
   scan:
     name: SonarCloud Analyze
     needs: build
-    # Dependabot PRs get no SONAR_TOKEN; the build job still verifies them. Tags are the master commit, already analyzed.
-    # Runs only after a build, so only when the backend changed.
+    # Dependabot PRs get no OIDC token for SonarCloud; the build job still verifies them. Tags are the master commit,
+    # already analyzed. Runs only after a build, so only when the backend changed.
     if: github.event.pull_request.user.login != 'dependabot[bot]' && !startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # secretless SonarCloud analysis: the auth step trades the job's OIDC token for a SonarCloud token
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -120,15 +123,20 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner
 
+      - name: Authenticate to SonarCloud
+        # Exports a 30-minute token, scoped to this project, as SONAR_TOKEN for the next steps.
+        uses: SonarSource/sonarqube-auth-action@b372e2c2930aadfcc4f4399446da1e12772709ad # v1.2
+        with:
+          project-key: scouting-wilo_SSSKL_Backend
+
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin \
             /k:"scouting-wilo_SSSKL_Backend" \
             /o:"scouting-wilo" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.opencover.reportsPaths="**/*.opencover.xml" \
             /d:sonar.exclusions="Frontend/**,Mobile/**,**/Migrations/**,**/Components/**,**/Controllers/**,**/Pages/**,**/DependencyInjection.cs,**/Program.cs" \
@@ -140,7 +148,7 @@ jobs:
             /p:CollectCoverage=true \
             /p:CoverletOutputFormat=opencover
 
-          dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
   version:
     name: Version
