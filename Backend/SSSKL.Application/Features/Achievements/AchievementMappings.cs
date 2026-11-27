@@ -49,8 +49,8 @@ public static class AchievementMappings
         allAchievements.Select(a =>
         {
             var entry = userEntries.SingleOrDefault(e => e.Achievement.Id == a.Id);
-            var parent = a.ParentAchievementId.HasValue
-                ? allAchievements.FirstOrDefault(x => x.Id == a.ParentAchievementId.Value)
+            var parent = a.ParentAchievementId is { } parentId
+                ? allAchievements.FirstOrDefault(x => x.Id == parentId)
                 : null;
             return new AchievementListingDto(
                 a.Id,

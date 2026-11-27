@@ -64,6 +64,7 @@ public interface ISssklApi
     /// <summary>Every achievement with the user's progress.</summary>
     Task<IReadOnlyList<AchievementListing>> GetAchievementListingAsync(string userId, CancellationToken cancellationToken = default);
 
+    /// <summary>A page of events.</summary>
     /// <param name="futureOnly">Only events that haven't ended yet.</param>
     Task<Page<EventItem>> GetEventsAsync(int skip, int take, bool futureOnly, CancellationToken cancellationToken = default);
     Task<EventItem> GetEventAsync(Guid id, CancellationToken cancellationToken = default);

@@ -85,7 +85,7 @@ public sealed partial class UserProfileViewModel(
             IsAdmin = me.IsInRole(RoleNames.Admin);
 
             var profileTask = api.GetUserProfileAsync(_userId);
-            var achievementsTask = TryAsync(() => api.GetAchievementEntriesAsync(_userId), (IReadOnlyList<AchievementEntry>)[]);
+            var achievementsTask = TryAsync<IReadOnlyList<AchievementEntry>>(() => api.GetAchievementEntriesAsync(_userId), []);
             var statsTask = IsAdmin ? TryAsync<UserStats?>(async () => await api.GetStatsAsync(_userId), null) : Task.FromResult<UserStats?>(null);
             var profile = await profileTask;
             var achievements = await achievementsTask;

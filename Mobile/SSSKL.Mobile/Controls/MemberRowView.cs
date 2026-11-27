@@ -70,13 +70,7 @@ public sealed class MemberRowView : ContentView
 
         _rank.IsVisible = row.Rank is not null;
         _rankText.Text = row.RankText;
-        var (rankBackground, rankText) = row switch
-        {
-            { IsGold: true } => (Color.FromArgb("#F59E0B"), Color.FromArgb("#422006")),
-            { IsSilver: true } => (Color.FromArgb("#CBD5E1"), Color.FromArgb("#0F172A")),
-            { IsBronze: true } => (Color.FromArgb("#B45309"), Colors.White),
-            _ => (Colors.Transparent, (Color?)null)
-        };
+        var (rankBackground, rankText) = RankColors(row);
         _rank.BackgroundColor = rankBackground;
         if (rankText is null)
         {
@@ -115,6 +109,15 @@ public sealed class MemberRowView : ContentView
             _card.SetAppTheme<Brush>(Border.StrokeProperty, new SolidColorBrush(Resource("BorderLight")), new SolidColorBrush(Resource("BorderDark")));
         }
     }
+
+    // Gold, silver and bronze for the top three; no text colour means the muted theme colour.
+    private static (Color Background, Color? Text) RankColors(MemberRow row) => row switch
+    {
+        { IsGold: true } => (Color.FromArgb("#F59E0B"), Color.FromArgb("#422006")),
+        { IsSilver: true } => (Color.FromArgb("#CBD5E1"), Color.FromArgb("#0F172A")),
+        { IsBronze: true } => (Color.FromArgb("#B45309"), Colors.White),
+        _ => (Colors.Transparent, null)
+    };
 
     private static Color Resource(string key) => (Color)Application.Current!.Resources[key];
 }

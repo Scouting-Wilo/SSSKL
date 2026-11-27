@@ -36,9 +36,8 @@ public static partial class DescriptionText
             return "";
         }
         var html = new StringBuilder();
-        foreach (var line in normalized.Split('\n'))
+        foreach (var trimmed in normalized.Split('\n').Select(line => line.TrimEnd()))
         {
-            var trimmed = line.TrimEnd();
             html.Append(trimmed.Length == 0 ? "<p><br></p>" : $"<p>{WebUtility.HtmlEncode(trimmed)}</p>");
         }
         return html.ToString();

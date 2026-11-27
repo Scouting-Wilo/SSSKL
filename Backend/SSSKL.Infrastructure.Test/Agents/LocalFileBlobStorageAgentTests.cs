@@ -18,7 +18,7 @@ public class LocalFileBlobStorageAgentTests
     [TestInitialize]
     public void TestInitialize()
     {
-        _contentRoot = Path.Combine(Path.GetTempPath(), $"ssskl-blobs-{Guid.NewGuid():N}");
+        _contentRoot = Path.Join(Path.GetTempPath(), $"ssskl-blobs-{Guid.NewGuid():N}");
         _sut = CreateAgent(blobRoot: "blobs");
     }
 
@@ -43,7 +43,7 @@ public class LocalFileBlobStorageAgentTests
     [TestMethod]
     public void Constructor_CreatesConfiguredRootUnderContentRoot()
     {
-        Directory.Exists(Path.Combine(_contentRoot, "blobs")).Should().BeTrue();
+        Directory.Exists(Path.Join(_contentRoot, "blobs")).Should().BeTrue();
     }
 
     [TestMethod]
@@ -51,7 +51,7 @@ public class LocalFileBlobStorageAgentTests
     {
         CreateAgent(blobRoot: null);
 
-        Directory.Exists(Path.Combine(_contentRoot, "blobs")).Should().BeTrue();
+        Directory.Exists(Path.Join(_contentRoot, "blobs")).Should().BeTrue();
     }
 
     [TestMethod]
@@ -59,7 +59,7 @@ public class LocalFileBlobStorageAgentTests
     {
         var item = await _sut.UploadFileToBlobAsync("photo.png", " image/png ", Content("hello"));
 
-        var path = Path.Combine(_contentRoot, "blobs", "photo.png");
+        var path = Path.Join(_contentRoot, "blobs", "photo.png");
         (await File.ReadAllTextAsync(path, TestContext.CancellationToken)).Should().Be("hello");
         item.FileName.Should().Be("photo.png");
         item.ContentType.Should().Be("image/png");
@@ -83,7 +83,7 @@ public class LocalFileBlobStorageAgentTests
         await _sut.UploadFileToBlobAsync("file.txt", "text/plain", Content("first version"));
         await _sut.UploadFileToBlobAsync("file.txt", "text/plain", Content("second"));
 
-        (await File.ReadAllTextAsync(Path.Combine(_contentRoot, "blobs", "file.txt"), TestContext.CancellationToken)).Should().Be("second");
+        (await File.ReadAllTextAsync(Path.Join(_contentRoot, "blobs", "file.txt"), TestContext.CancellationToken)).Should().Be("second");
     }
 
     [TestMethod]
@@ -112,7 +112,7 @@ public class LocalFileBlobStorageAgentTests
         var result = await _sut.DeleteFileToBlobAsync("file.txt");
 
         result.Should().BeTrue();
-        File.Exists(Path.Combine(_contentRoot, "blobs", "file.txt")).Should().BeFalse();
+        File.Exists(Path.Join(_contentRoot, "blobs", "file.txt")).Should().BeFalse();
     }
 
     [TestMethod]

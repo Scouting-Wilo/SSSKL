@@ -9,7 +9,7 @@ import { MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { QuoteService } from './services/quote.service';
-import { QuoteDto, QuoteCreateDto } from '../../core/models/quote.model';
+import { QuoteDto } from '../../core/models/quote.model';
 import { LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { GlobalSettingsService } from '../admin/services/global-settings.service';

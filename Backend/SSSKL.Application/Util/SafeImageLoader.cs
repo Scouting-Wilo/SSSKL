@@ -12,14 +12,16 @@ public static class SafeImageLoader
     // Roughly 8000x5000; larger than any phone camera, far below what would threaten the App Service plan
     public const long MaxPixels = 40_000_000;
 
+    /// <summary>Loads an image after checking that its size stays within <see cref="MaxPixels"/>.</summary>
     /// <exception cref="InvalidImageContentException">The image is larger than <see cref="MaxPixels"/>.</exception>
     /// <exception cref="UnknownImageFormatException">The data is not a supported image.</exception>
     public static async Task<Image> LoadAsync(Stream stream, CancellationToken cancellationToken = default)
     {
+        // Only a stream that can't seek is copied; the copy is disposed once the image has been decoded.
+        await using var buffer = stream.CanSeek ? null : new MemoryStream();
         var seekable = stream;
-        if (!stream.CanSeek)
+        if (buffer is not null)
         {
-            var buffer = new MemoryStream();
             await stream.CopyToAsync(buffer, cancellationToken);
             buffer.Position = 0;
             seekable = buffer;

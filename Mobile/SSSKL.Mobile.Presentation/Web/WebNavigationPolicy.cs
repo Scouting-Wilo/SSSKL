@@ -15,6 +15,7 @@ public enum WebNavigationKind
     Block
 }
 
+/// <summary>What the WebView should do with a navigation.</summary>
 /// <param name="NativePath">For the <c>open</c> action: the SPA route to show natively (<c>ssskl-app://open?path=/events/1</c>).</param>
 public sealed record WebNavigationDecision(WebNavigationKind Kind, string? NativeAction = null, string? NativePath = null);
 

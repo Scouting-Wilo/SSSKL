@@ -1,6 +1,7 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
+using SSSKL.Web.Logging;
 
 namespace SSSKL.Web.Registrations;
 
@@ -47,7 +48,7 @@ public static class RateLimitingRegistrations
                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
                     .CreateLogger(typeof(RateLimitingRegistrations));
                 logger.LogWarning("Rate limit hit for {Path} from {RemoteIp}",
-                    context.HttpContext.Request.Path, context.HttpContext.Connection.RemoteIpAddress);
+                    LogSanitizer.Clean(context.HttpContext.Request.Path), context.HttpContext.Connection.RemoteIpAddress);
                 return ValueTask.CompletedTask;
             };
 

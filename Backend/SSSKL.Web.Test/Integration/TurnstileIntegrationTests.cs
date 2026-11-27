@@ -51,7 +51,7 @@ public class TurnstileIntegrationTests
         await using var factory = CreateFactory(turnstile);
         var client = factory.CreateClient();
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/identity/forgotPassword")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/identity/forgotPassword")
         {
             Content = JsonContent.Create(new { email = "nobody@example.com" })
         };

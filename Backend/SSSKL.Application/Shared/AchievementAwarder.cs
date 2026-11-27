@@ -41,14 +41,14 @@ internal sealed class AchievementAwarder(
                 return false;
 
             // Tiered Sequence: If this has a parent, ensure parent is awarded
-            if (achievement.ParentAchievementId.HasValue && !entries.Any(e => e.Achievement.Id == achievement.ParentAchievementId.Value))
+            if (achievement.ParentAchievementId is { } parentId && !entries.Any(e => e.Achievement.Id == parentId))
             {
-                if (visitedAchievementIds.Contains(achievement.ParentAchievementId.Value))
+                if (visitedAchievementIds.Contains(parentId))
                 {
                     return false;
                 }
 
-                await AwardToUserInternal(userId, achievement.ParentAchievementId.Value, visitedAchievementIds);
+                await AwardToUserInternal(userId, parentId, visitedAchievementIds);
             }
 
             var achievementEntry = new AchievementEntry
@@ -102,11 +102,9 @@ internal sealed class AchievementAwarder(
 
     private async Task Announce(IEnumerable<AchievementEntry> entries)
     {
-        foreach (var entry in entries)
+        // Achievement and User are required, but guard against entries loaded without them.
+        foreach (var entry in entries.Where(entry => entry.Achievement != null && entry.User != null))
         {
-            if (entry.Achievement == null || entry.User == null)
-                continue;
-
             await purchaseNotifier.NotifyAchievementAsync(new AchievementEvent(
                 entry.Achievement.Name,
                 entry.User.FullName,

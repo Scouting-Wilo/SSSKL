@@ -126,11 +126,8 @@ public class EventRepository(IDbContextFactory<ApplicationDbContext> dbContextFa
 
         if (incomingRoles.Count > 0)
         {
-            foreach (var role in incomingRoles)
+            foreach (var role in incomingRoles.Where(role => role != null))
             {
-                if (role == null)
-                    continue;
-
                 var trackedRole = await context.Roles
                     .FirstOrDefaultAsync(r => r.Id == role.Id || r.Name == role.Name);
 

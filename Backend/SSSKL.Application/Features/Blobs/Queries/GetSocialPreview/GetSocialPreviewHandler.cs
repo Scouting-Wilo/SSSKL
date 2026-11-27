@@ -64,11 +64,19 @@ internal sealed class GetSocialPreviewHandler(IBlobStorageItemRepository blobSto
             }));
         }
 
+        // The caller owns the stream on success (the controller's file result disposes it); dispose it here otherwise.
         var outputStream = new MemoryStream();
-        // WhatsApp is sensitive to file size (ideally < 300KB); quality 75 balances size and looks
-        await sourceImage.SaveAsJpegAsync(outputStream, new JpegEncoder { Quality = 75 }, cancellationToken);
-        outputStream.Position = 0;
-
-        return new SocialPreview(outputStream, image.CreatedOn);
+        try
+        {
+            // WhatsApp is sensitive to file size (ideally < 300KB); quality 75 balances size and looks
+            await sourceImage.SaveAsJpegAsync(outputStream, new JpegEncoder { Quality = 75 }, cancellationToken);
+            outputStream.Position = 0;
+            return new SocialPreview(outputStream, image.CreatedOn);
+        }
+        catch
+        {
+            await outputStream.DisposeAsync();
+            throw;
+        }
     }
 }

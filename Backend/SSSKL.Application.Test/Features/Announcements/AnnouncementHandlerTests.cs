@@ -93,7 +93,7 @@ public class AnnouncementHandlerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _mockRepository.GetById(id).Returns((Announcement?)null);
+        _mockRepository.GetById(id).Returns(default(Announcement?));
         var sut = new GetAnnouncementByIdHandler(_mockRepository);
 
         // Act
@@ -175,7 +175,7 @@ public class AnnouncementHandlerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _mockRepository.GetById(id).Returns((Announcement?)null);
+        _mockRepository.GetById(id).Returns(default(Announcement?));
         var sut = new UpdateAnnouncementHandler(_mockRepository);
 
         // Act
@@ -206,7 +206,7 @@ public class AnnouncementHandlerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _mockRepository.GetById(id).Returns((Announcement?)null);
+        _mockRepository.GetById(id).Returns(default(Announcement?));
         var sut = new DeleteAnnouncementHandler(_mockRepository);
 
         // Act

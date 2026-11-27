@@ -56,7 +56,7 @@ public class AuthSessionTests
         // Arrange
         var store = new InMemoryTokenStore(Old);
         var refresher = Substitute.For<ITokenRefresher>();
-        refresher.RefreshAsync(default!, default).ReturnsForAnyArgs((TokenSet?)null);
+        refresher.RefreshAsync(default!, default).ReturnsForAnyArgs(default(TokenSet?));
         var sut = new AuthSession(store, refresher, NullLogger<AuthSession>.Instance);
         var expired = false;
         sut.SessionExpired += (_, _) => expired = true;

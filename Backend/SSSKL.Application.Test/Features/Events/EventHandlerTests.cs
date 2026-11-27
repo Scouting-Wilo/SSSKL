@@ -130,7 +130,7 @@ public class EventHandlerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _eventRepository.GetById(id).Returns((Event)null!);
+        _eventRepository.GetById(id).Returns(default(Event)!);
 
         // Act & Assert
         await this.Invoking(s => s.GetEventById(id)).Should().ThrowAsync<NotFoundException>();
@@ -373,7 +373,7 @@ public class EventHandlerTests
         var userId = "user-id";
         var e = new Event { Id = id };
         _eventRepository.GetById(id).Returns(e);
-        _eventRepository.GetResponse(id, userId).Returns((EventResponse)null!);
+        _eventRepository.GetResponse(id, userId).Returns(default(EventResponse)!);
 
         // Act
         await RespondToEvent(id, userId, EventResponseStatus.Accepted);

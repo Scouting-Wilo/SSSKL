@@ -127,7 +127,8 @@ public class EventIntegrationTests : IntegrationTestBase
         var (client, _) = await CreateAuthenticatedClientAsync(Roles.User);
         var id = await CreateEventAsync(client, EventForm("Blijft staan"));
 
-        var response = await client.PostAsync($"/api/v1/events/{id}", new MultipartFormDataContent(), CT);
+        using var emptyForm = new MultipartFormDataContent();
+        var response = await client.PostAsync($"/api/v1/events/{id}", emptyForm, CT);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await LoadEventAsync(id)).Title.Should().Be("Blijft staan");

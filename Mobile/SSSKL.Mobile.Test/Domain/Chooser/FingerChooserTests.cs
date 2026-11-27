@@ -23,7 +23,7 @@ public class FingerChooserTests
     {
         foreach (var id in ids)
         {
-            chooser.TouchDown(id, id * 10, id * 10);
+            chooser.TouchDown(id, id * 10f, id * 10f);
         }
     }
 

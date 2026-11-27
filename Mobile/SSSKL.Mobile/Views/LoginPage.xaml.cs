@@ -23,6 +23,9 @@ public partial class LoginPage : ContentPage
     private bool _completed;
     private bool _closing;
 
+    // Read again after every await: the sheet can close or complete while JavaScript runs.
+    private bool IsFinished => _completed || _closing;
+
     public LoginPage(AppNavigator navigator, WebNavigationPolicy policy, AppEndpoints endpoints)
     {
         InitializeComponent();
@@ -122,7 +125,7 @@ public partial class LoginPage : ContentPage
 
     private async Task TryCompleteAsync()
     {
-        if (_completed || _closing)
+        if (IsFinished)
         {
             return;
         }
@@ -137,7 +140,7 @@ public partial class LoginPage : ContentPage
         }
 
         var tokens = WebSessionScript.ParseTokens(result);
-        if (tokens is null || _completed || _closing)
+        if (tokens is null || IsFinished)
         {
             return;
         }

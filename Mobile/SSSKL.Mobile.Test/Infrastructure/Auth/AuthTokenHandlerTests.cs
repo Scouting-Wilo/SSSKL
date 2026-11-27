@@ -57,7 +57,8 @@ public class AuthTokenHandlerTests
         using var client = CreateClient(session, inner);
 
         // Act
-        var response = await client.PostAsync("api/v1/order", new StringContent("{\"amount\":1}"), TestContext.CancellationToken);
+        using var content = new StringContent("{\"amount\":1}");
+        using var response = await client.PostAsync("api/v1/order", content, TestContext.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -71,7 +72,7 @@ public class AuthTokenHandlerTests
     {
         // Arrange
         var refresher = Substitute.For<ITokenRefresher>();
-        refresher.RefreshAsync(default!, default).ReturnsForAnyArgs((TokenSet?)null);
+        refresher.RefreshAsync(default!, default).ReturnsForAnyArgs(default(TokenSet?));
         var session = new AuthSession(new InMemoryTokenStore(new TokenSet("a1", "r1")), refresher, NullLogger<AuthSession>.Instance);
         var inner = new StubHttpHandler((_, _) => StubHttpHandler.Status(HttpStatusCode.Unauthorized));
         using var client = CreateClient(session, inner);

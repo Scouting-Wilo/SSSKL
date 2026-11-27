@@ -111,7 +111,8 @@ public class EventsControllerTests
         var dto = new EventCreateDto { Title = "Event with image" };
         var image = Substitute.For<IFormFile>();
         image.ContentType.Returns("image/png");
-        image.OpenReadStream().Returns(new MemoryStream());
+        using var imageStream = new MemoryStream();
+        image.OpenReadStream().Returns(imageStream);
         _sender.Send(Arg.Any<CreateEventCommand>(), Arg.Any<CancellationToken>()).Returns(new EventDto { Id = Guid.NewGuid() });
 
         var result = await _sut.Create(dto, image);

@@ -11,7 +11,7 @@ import { FROM_APP_STATE } from '../services/native-bridge.service';
 export const nativeRouteGuard = (
   action: NativeAction,
   when: (route: ActivatedRouteSnapshot) => boolean = () => true,
-): CanActivateFn => (route) => {
+): CanActivateFn => (route, _state) => {
   const embedded = inject(EmbeddedService);
   if (!embedded.isEmbedded || !when(route)) {
     return true;

@@ -3,7 +3,7 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { apiBaseInterceptor } from './api-base.interceptor';
 import { environment } from '../../../environments/environment';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('apiBaseInterceptor', () => {
   let httpClient: HttpClient;

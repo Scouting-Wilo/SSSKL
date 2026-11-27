@@ -113,15 +113,12 @@ public partial class AchievementEventHandler(
         // Also update QuoteVotesReceived for authors
         if (vote.Quote?.Authors != null)
         {
-            foreach (var author in vote.Quote.Authors)
+            foreach (var authorId in vote.Quote.Authors.Select(author => author.ApplicationUserId).OfType<string>())
             {
-                if (author.ApplicationUserId != null)
-                {
-                    var authorStats = await userStatRepository.GetOrCreateByUserId(author.ApplicationUserId);
-                    authorStats.QuoteVotesReceived += 1;
-                    await userStatRepository.Update(authorStats);
-                    await CheckAndAwardAchievements(author.ApplicationUserId, authorStats);
-                }
+                var authorStats = await userStatRepository.GetOrCreateByUserId(authorId);
+                authorStats.QuoteVotesReceived += 1;
+                await userStatRepository.Update(authorStats);
+                await CheckAndAwardAchievements(authorId, authorStats);
             }
         }
         
@@ -170,17 +167,12 @@ public partial class AchievementEventHandler(
     {
         var uncompletedAchievements = await achievementRepository.GetUncompletedAchievementsForUser(stats.UserId);
         
-        foreach (var achievement in uncompletedAchievements)
+        var earned = uncompletedAchievements
+            .Where(achievement => achievement.AutoAchieve && AchievementRulesUtil.CheckStatAchievement(achievement, stats));
+        foreach (var achievement in earned)
         {
-            if (!achievement.AutoAchieve) continue;
-
-            bool shouldAward = AchievementRulesUtil.CheckStatAchievement(achievement, stats);
-
-            if (shouldAward)
-            {
-                LogAwarding(logger, achievement.Name, userId);
-                await achievementAwarder.AwardToUser(userId, achievement.Id);
-            }
+            LogAwarding(logger, achievement.Name, userId);
+            await achievementAwarder.AwardToUser(userId, achievement.Id);
         }
     }
 

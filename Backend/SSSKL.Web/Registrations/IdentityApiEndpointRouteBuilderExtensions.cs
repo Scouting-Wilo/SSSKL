@@ -561,7 +561,6 @@ public static class IdentityApiEndpointRouteBuilderExtensions
               var assertionJson = assertion.GetRawText();
              var signInManager = sp.GetRequiredService<SignInManager<ApplicationUser>>();
              var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
-             var isPersistent = (useCookies == true) && (useSessionCookies != true);
              signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
 
              var result = await signInManager.PasskeySignInAsync(assertionJson);
@@ -637,12 +636,9 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         }
 
         var query = new Dictionary<string, string?>();
-        foreach (var pair in queryValues)
+        foreach (var pair in queryValues.Where(pair => !string.IsNullOrEmpty(pair.Value)))
         {
-            if (!string.IsNullOrEmpty(pair.Value))
-            {
-                query[pair.Key] = pair.Value;
-            }
+            query[pair.Key] = pair.Value;
         }
 
         return QueryHelpers.AddQueryString($"{trimmedDomain}{path}", query);

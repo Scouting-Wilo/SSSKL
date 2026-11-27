@@ -68,7 +68,8 @@ public class TurnstileService(
         SiteverifyResponse? result;
         try
         {
-            using var response = await httpClient.PostAsync(SiteverifyUrl, new FormUrlEncodedContent(form), cancellationToken);
+            using var content = new FormUrlEncodedContent(form);
+            using var response = await httpClient.PostAsync(SiteverifyUrl, content, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogError("Turnstile siteverify returned HTTP {StatusCode}", (int)response.StatusCode);

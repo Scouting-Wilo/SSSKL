@@ -34,6 +34,7 @@ public sealed class TurnstileEndpointFilter(string action) : IEndpointFilter
 
 public static class TurnstileEndpointFilterExtensions
 {
+    /// <summary>Requires a valid Cloudflare Turnstile token on the endpoint.</summary>
     /// <param name="action">Turnstile action name; must match the action the frontend widget renders with.</param>
     public static RouteHandlerBuilder RequireTurnstile(this RouteHandlerBuilder builder, string action) =>
         builder.AddEndpointFilter(new TurnstileEndpointFilter(action));

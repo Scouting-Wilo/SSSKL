@@ -26,7 +26,7 @@ public class GetOrderInitializeHandlerTests
 
         // Assert
         result.Products.Should().ContainSingle().Which.Should().BeEquivalentTo(new { product.Id, product.Name, product.Stock, product.Price });
-        result.Users.Should().ContainSingle().Which.Should().BeEquivalentTo(new { user.Id, user.FullName, ProfilePictureUrl = (string?)null });
+        result.Users.Should().ContainSingle().Which.Should().BeEquivalentTo(new { user.Id, user.FullName, ProfilePictureUrl = default(string?) });
     }
 
     [TestMethod]

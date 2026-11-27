@@ -46,7 +46,7 @@ public partial class PublicControllerTests
         // Arrange
         var mockEnv = Substitute.For<IWebHostEnvironment>();
         mockEnv.EnvironmentName.Returns("Production");
-        _mockConfiguration["WEBSITE_DOMAIN"].Returns((string?)null);
+        _mockConfiguration["WEBSITE_DOMAIN"].Returns(default(string?));
  
         // Act
         var result = _sut.GetDomain(mockEnv);
@@ -62,7 +62,7 @@ public partial class PublicControllerTests
         // Arrange
         var mockEnv = Substitute.For<IWebHostEnvironment>();
         mockEnv.EnvironmentName.Returns("Development");
-        _mockConfiguration["WEBSITE_DOMAIN"].Returns((string?)null);
+        _mockConfiguration["WEBSITE_DOMAIN"].Returns(default(string?));
 
         // Act
         var result = _sut.GetDomain(mockEnv);

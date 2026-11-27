@@ -77,6 +77,7 @@ public sealed partial class AchievementsViewModel(
 
     public bool IsEmpty => HasLoaded && !IsLoading && Items.Count == 0;
 
+    /// <summary>Sets whose achievements the page shows.</summary>
     /// <param name="userId">Another member's id; null for your own.</param>
     public void Initialize(string? userId) => _requestedUserId = userId;
 

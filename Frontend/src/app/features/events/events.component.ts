@@ -20,7 +20,6 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { FormsModule } from '@angular/forms';
 import { AvatarModule } from 'primeng/avatar';
 import { ResolveApiUrlPipe } from '../../shared/pipes/resolve-api-url.pipe';
-import { ProcessedContentPipe } from '../../shared/pipes/processed-content.pipe';
 import { UserProfileDrawerService } from '../../core/services/user-profile-drawer.service';
 
 @Component({

@@ -77,9 +77,8 @@ public static partial class MultiTouchPlatform
 
         private void End(NSSet touches)
         {
-            foreach (var touch in touches.ToArray<UITouch>())
+            foreach (var id in touches.ToArray<UITouch>().Select(Id))
             {
-                var id = Id(touch);
                 _active.Remove(id);
                 Target()?.OnTouchUp(id);
             }

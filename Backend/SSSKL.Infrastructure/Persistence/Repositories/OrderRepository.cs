@@ -169,7 +169,7 @@ public class OrderRepository(IDbContextFactory<ApplicationDbContext> dbContextFa
         var query = context.Order
             .Where(o => o.Product != null && o.Product.Id == productId && o.CreatedOn >= from);
 
-        if (to.HasValue) query = query.Where(o => o.CreatedOn < to.Value);
+        if (to is { } until) query = query.Where(o => o.CreatedOn < until);
         if (userIds != null)
         {
             var idSet = userIds.ToList();

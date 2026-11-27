@@ -44,9 +44,13 @@ public class WebPushServiceTests : RepositoryTest
             .Build();
     }
 
+    // HttpClients the tests created, disposed after each test.
+    private readonly List<HttpClient> _httpClients = [];
+
     [TestCleanup]
     public void TestCleanup()
     {
+        _httpClients.ForEach(client => client.Dispose());
         CleanupDatabase();
         _dbContext.Dispose();
     }
@@ -222,11 +226,16 @@ public class WebPushServiceTests : RepositoryTest
 
     private WebPushService CreateSut(HttpClient? httpClient = null, bool partialMock = false)
     {
+        if (httpClient is null)
+        {
+            httpClient = new HttpClient();
+            _httpClients.Add(httpClient);
+        }
         if (partialMock)
         {
-            return Substitute.ForPartsOf<WebPushService>(_configuration, _dbContext, httpClient ?? new HttpClient(), _logger);
+            return Substitute.ForPartsOf<WebPushService>(_configuration, _dbContext, httpClient, _logger);
         }
-        return new WebPushService(_configuration, _dbContext, httpClient ?? new HttpClient(), _logger);
+        return new WebPushService(_configuration, _dbContext, httpClient, _logger);
     }
 
     [TestMethod]
@@ -319,13 +328,26 @@ public class WebPushServiceTests : RepositoryTest
     private class MockHttpMessageHandler : HttpMessageHandler
     {
         private readonly System.Net.HttpStatusCode _statusCode;
+        private readonly List<HttpResponseMessage> _responses = [];
         public MockHttpMessageHandler(System.Net.HttpStatusCode statusCode) => _statusCode = statusCode;
+
+        // Disposes the responses it returned.
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _responses.ForEach(response => response.Dispose());
+            }
+            base.Dispose(disposing);
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
             // Lib.Net.Http.WebPush.PushServiceClient expects specific headers or it might throw differently,
             // but we want it to throw PushServiceClientException which usually happens on non-success status codes.
-            return Task.FromResult(new HttpResponseMessage(_statusCode));
+            var response = new HttpResponseMessage(_statusCode);
+            _responses.Add(response);
+            return Task.FromResult(response);
         }
     }
 }

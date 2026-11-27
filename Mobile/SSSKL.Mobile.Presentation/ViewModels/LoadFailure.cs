@@ -11,6 +11,7 @@ namespace SSSKL.Mobile.Presentation.ViewModels;
 /// </summary>
 public static class LoadFailure
 {
+    /// <summary>Tells the user that a load failed, with a toast when the page still has data to show.</summary>
     /// <returns>Whether the page should show its inline error state.</returns>
     public static async Task<bool> ReportAsync(IUserDialogs dialogs, IHaptics? haptics, bool hasData)
     {

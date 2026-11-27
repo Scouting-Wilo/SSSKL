@@ -5,6 +5,7 @@ using SSSKL.Mobile.Presentation.Localization;
 
 namespace SSSKL.Mobile.Presentation.Navigation;
 
+/// <summary>An entry of the "Meer" menu.</summary>
 /// <param name="Path">
 /// SPA route the entry stands for. <see cref="NativeRoutes"/> decides whether it opens natively or in the WebView.
 /// </param>

@@ -51,7 +51,7 @@ public class WhatsNewCoordinatorTests
     public async Task CheckAsync_EmptyOrMissingSetting_DoesNotShow()
     {
         // Arrange
-        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey, Arg.Any<CancellationToken>()).Returns(new GlobalSetting("WhatsNewContent", "  ", "v2"), (GlobalSetting?)null);
+        _api.GetGlobalSettingAsync(WhatsNewCoordinator.SettingKey, Arg.Any<CancellationToken>()).Returns(new GlobalSetting("WhatsNewContent", "  ", "v2"), default(GlobalSetting?));
         var sut = CreateSut();
 
         // Act

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, effect, signal, ViewChild, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, effect, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { AuthService, InfoResponse, TwoFactorResponse } from '../../core/auth/auth.service';
 import { PasskeyDto } from '../../core/models/passkey.model';
@@ -14,10 +14,9 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { FileUploadModule } from 'primeng/fileupload';
-import { ThemeService, ThemeMode } from '../../core/services/theme.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { LanguageService } from '../../core/services/language.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
-import { ResolveApiUrlPipe } from '../../shared/pipes/resolve-api-url.pipe';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import * as QRCode from 'qrcode';
 

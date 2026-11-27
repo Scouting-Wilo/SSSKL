@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using SSSKL.Domain.Exceptions;
+using SSSKL.Web.Logging;
 
 namespace SSSKL.Web.Registrations;
 
@@ -38,12 +39,14 @@ public sealed partial class GlobalExceptionHandler(
 
         if (status >= StatusCodes.Status500InternalServerError)
         {
-            logger.LogError(exception, "Unhandled exception for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+            logger.LogError(exception, "Unhandled exception for {Method} {Path}",
+                LogSanitizer.Clean(httpContext.Request.Method), LogSanitizer.Clean(httpContext.Request.Path));
         }
         else
         {
             logger.LogWarning("Request {Method} {Path} failed with {StatusCode}: {ExceptionType}",
-                httpContext.Request.Method, httpContext.Request.Path, status, exception.GetType().Name);
+                LogSanitizer.Clean(httpContext.Request.Method), LogSanitizer.Clean(httpContext.Request.Path), status,
+                exception.GetType().Name);
         }
 
         httpContext.Response.StatusCode = status;

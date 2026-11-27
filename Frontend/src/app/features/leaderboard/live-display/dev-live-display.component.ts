@@ -22,10 +22,6 @@ interface Slide {
   meme?: string;
 }
 
-const MEMES = [
-  '50bs13.jpg', '517shd.jpg', '5oblti.jpg'
-];
-
 @Component({
   selector: 'app-dev-live-display',
   standalone: true,

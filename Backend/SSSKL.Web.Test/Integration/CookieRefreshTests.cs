@@ -48,7 +48,7 @@ namespace SSSKL.Web.Test.Integration
 
             // Register user
             var registerPayload = new { email = TestEmail, userName = TestEmail, password = TestPassword, name = "Integration", surname = "Refresh" };
-            var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
+            using var regContent = new StringContent(JsonSerializer.Serialize(registerPayload), Encoding.UTF8, "application/json");
             var regResponse = await client.PostAsync("/api/v1/identity/register", regContent, TestContext.CancellationToken);
             var regBody = await regResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Register response status: " + (int)regResponse.StatusCode + " body: " + regBody);
@@ -67,7 +67,7 @@ namespace SSSKL.Web.Test.Integration
 
             // Login using cookies
             var loginPayload = new { userName = TestEmail, password = TestPassword };
-            var loginContent = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
+            using var loginContent = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
             var loginResponse = await client.PostAsync("/api/v1/identity/login?useCookies=true", loginContent, TestContext.CancellationToken);
             var loginBody = await loginResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Login response status: " + (int)loginResponse.StatusCode + " body: " + loginBody);
@@ -90,7 +90,7 @@ namespace SSSKL.Web.Test.Integration
             }
 
             // Call refresh endpoint using the same client so cookies are sent automatically
-            var refreshContent = new StringContent("{}", Encoding.UTF8, "application/json");
+            using var refreshContent = new StringContent("{}", Encoding.UTF8, "application/json");
             var refreshResponse = await client.PostAsync("/api/v1/identity/refresh?useCookies=true", refreshContent, TestContext.CancellationToken);
             var refreshBody = await refreshResponse.Content.ReadAsStringAsync(TestContext.CancellationToken);
             Console.WriteLine("[Test] Refresh response status: " + (int)refreshResponse.StatusCode + " body: " + refreshBody);
